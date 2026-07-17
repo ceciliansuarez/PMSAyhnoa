@@ -1,0 +1,63 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../lib/generated/client"
+}
+
+model Property {
+  id          String            @id @default(uuid())
+  name        String
+  address     String
+  colorCode   String            // Código de color hexadecimal para la UI (ej. "#4f46e5")
+  bookings    Booking[]
+  inventory   InventoryItem[]
+  finances    FinancialRecord[]
+  tasks       Task[]
+}
+
+model Booking {
+  id           String   @id @default(uuid())
+  propertyId   String
+  property     Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  guestName    String
+  checkIn      DateTime
+  checkOut     DateTime
+  totalRevenue Float
+  platform     String   @default("Airbnb")
+  status       String   // CONFIRMED, PENDING, CANCELLED
+}
+
+model InventoryItem {
+  id           String   @id @default(uuid())
+  propertyId   String
+  property     Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  name         String
+  currentStock Int
+  minStock     Int
+  unit         String   // Ej. "unidades", "cápsulas", "paquetes"
+}
+
+model FinancialRecord {
+  id          String   @id @default(uuid())
+  propertyId  String
+  property     Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  type        String   // INCOME, EXPENSE
+  category    String   // Ej. "Reserva", "Limpieza", "Mantenimiento", "Servicios"
+  amount      Float
+  date        DateTime @default(now())
+  description String?
+}
+
+model Task {
+  id          String   @id @default(uuid())
+  propertyId  String
+  property     Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  dueDate     DateTime
+  status      String   // PENDING, IN_PROGRESS, COMPLETED
+  type        String   // CLEANING, MAINTENANCE
+}
