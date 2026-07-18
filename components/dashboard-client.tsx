@@ -165,6 +165,11 @@ export default function DashboardClient({
 
   // Checklist states for the shopping list
   const [boughtItems, setBoughtItems] = useState<Record<string, boolean>>({});
+  // Quantities actually bought
+  const [boughtQuantities, setBoughtQuantities] = useState<Record<string, number>>({});
+
+  // Collapsed state for the home inventory alerts widget
+  const [isHomeAlertsCollapsed, setIsHomeAlertsCollapsed] = useState(false);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -528,12 +533,18 @@ export default function DashboardClient({
       for (const id of checkedIds) {
         const item = inventory.find(i => i.id === id);
         if (item) {
-          // Automatically restore item stock to its minimum limit
-          await adjustInventoryStock(id, item.minStock);
+          const defaultNeeded = item.minStock - item.currentStock;
+          // Read custom quantity actually bought, fallback to total missing
+          const qtyBought = boughtQuantities[id] !== undefined ? boughtQuantities[id] : defaultNeeded;
+          if (qtyBought > 0) {
+            // Increment stock by actual quantity purchased
+            await adjustInventoryStock(id, item.currentStock + qtyBought);
+          }
         }
       }
       setIsShoppingListOpen(false);
       setBoughtItems({});
+      setBoughtQuantities({});
     } catch (err) {
       console.error(err);
     } finally {
@@ -867,42 +878,58 @@ export default function DashboardClient({
               </div>
             </div>
 
-            {/* Low Inventory Alert */}
-            <div className="bg-card border border-border rounded-2xl p-6 space-y-4">
-              <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                <ShieldAlert className="w-4 h-4 text-amber-500" />
-                Alertas de Inventario
-              </h3>
-              <div className="space-y-3">
-                {lowStockAlerts.length === 0 ? (
-                  <p className="text-xs text-muted-foreground text-center py-2">Stock completo. No hay alertas.</p>
+            {/* Low Inventory Alert Card (Collapsible) */}
+            <div className="bg-card border border-border rounded-2xl p-6 space-y-4 transition-all">
+              <div 
+                onClick={() => setIsHomeAlertsCollapsed(prev => !prev)}
+                className="flex items-center justify-between cursor-pointer select-none"
+              >
+                <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                  <ShieldAlert className="w-4 h-4 text-amber-500 shrink-0" />
+                  <span>Alertas de Inventario</span>
+                  <span className="text-[10px] bg-amber-500/10 text-amber-600 dark:bg-amber-950/40 dark:text-amber-300 px-2 py-0.5 rounded-full font-bold ml-1">
+                    {lowStockAlerts.length}
+                  </span>
+                </h3>
+                {isHomeAlertsCollapsed ? (
+                  <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" />
                 ) : (
-                  lowStockAlerts.map((item) => {
-                    const prop = properties.find(p => p.id === item.propertyId);
-                    return (
-                      <div 
-                        key={item.id} 
-                        onClick={() => {
-                          setSelectedInventoryItem(item);
-                          setIsInventoryOpen(true);
-                        }}
-                        className="flex items-center justify-between p-3 rounded-xl border border-amber-500/20 bg-amber-500/5 hover:bg-amber-500/10 cursor-pointer transition-colors active:scale-[0.98]"
-                      >
-                        <div className="min-w-0 pr-2">
-                          <h4 className="font-semibold text-xs truncate text-amber-700 dark:text-amber-300">{item.name}</h4>
-                          <p className="text-[10px] text-muted-foreground truncate">{prop?.name}</p>
-                        </div>
-                        <div className="text-right shrink-0">
-                          <span className="font-bold text-xs text-amber-700 dark:text-amber-400">
-                            {item.currentStock} / {item.minStock}
-                          </span>
-                          <span className="text-[9px] block text-muted-foreground">{item.unit}</span>
-                        </div>
-                      </div>
-                    );
-                  })
+                  <ChevronUp className="w-4 h-4 text-muted-foreground shrink-0" />
                 )}
               </div>
+
+              {!isHomeAlertsCollapsed && (
+                <div className="space-y-3 pt-1 animate-fade-in">
+                  {lowStockAlerts.length === 0 ? (
+                    <p className="text-xs text-muted-foreground text-center py-2">Stock completo. No hay alertas.</p>
+                  ) : (
+                    lowStockAlerts.map((item) => {
+                      const prop = properties.find(p => p.id === item.propertyId);
+                      return (
+                        <div 
+                          key={item.id} 
+                          onClick={() => {
+                            setSelectedInventoryItem(item);
+                            setIsInventoryOpen(true);
+                          }}
+                          className="flex items-center justify-between p-3 rounded-xl border border-amber-500/20 bg-amber-500/5 hover:bg-amber-500/10 cursor-pointer transition-colors active:scale-[0.98]"
+                        >
+                          <div className="min-w-0 pr-2">
+                            <h4 className="font-semibold text-xs truncate text-amber-700 dark:text-amber-300">{item.name}</h4>
+                            <p className="text-[10px] text-muted-foreground truncate">{prop?.name}</p>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <span className="font-bold text-xs text-amber-700 dark:text-amber-400">
+                              {item.currentStock} / {item.minStock}
+                            </span>
+                            <span className="text-[9px] block text-muted-foreground">{item.unit}</span>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -1011,11 +1038,12 @@ export default function DashboardClient({
             </div>
 
             <div className="flex gap-2 shrink-0">
-              {/* Shopping List Button (Only highlighted if items are missing) */}
+              {/* Shopping List Button */}
               {missingItems.length > 0 ? (
                 <button
                   onClick={() => {
                     setBoughtItems({});
+                    setBoughtQuantities({});
                     setIsShoppingListOpen(true);
                   }}
                   className="flex items-center justify-center gap-1.5 bg-amber-500/10 text-amber-600 dark:bg-amber-950/40 dark:text-amber-300 hover:bg-amber-500/20 border border-amber-500/20 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all active:scale-95 h-10"
@@ -1082,7 +1110,7 @@ export default function DashboardClient({
                         setNewSpaceForm({ propertyId: prop.id, name: '' });
                         setIsNewSpaceOpen(true);
                       }}
-                      className="inline-flex items-center gap-1 text-[11px] font-bold text-primary bg-primary/5 hover:bg-primary/10 border border-primary/20 px-3 py-1.5 rounded-xl transition-all animate-fade-in"
+                      className="inline-flex items-center gap-1 text-[11px] font-bold text-primary bg-primary/5 hover:bg-primary/10 border border-primary/20 px-3 py-1.5 rounded-xl transition-all"
                     >
                       <FolderPlus className="w-3.5 h-3.5" />
                       <span>+ Ambiente</span>
@@ -1098,7 +1126,7 @@ export default function DashboardClient({
                       const isCollapsed = !!collapsedSpaces[space.id];
 
                       return (
-                        <div key={space.id} className="border border-border/80 rounded-xl p-4 bg-muted/10 space-y-4 animate-fade-in">
+                        <div key={space.id} className="border border-border/80 rounded-xl p-4 bg-muted/10 space-y-4">
                           {/* Clickable Space Header */}
                           <div 
                             onClick={() => toggleSpaceCollapse(space.id)}
@@ -1305,7 +1333,7 @@ export default function DashboardClient({
                     })}
 
                     {/* 2. Reposición Category (Static block) */}
-                    <div className="border border-dashed border-border rounded-xl p-4 bg-muted/5 space-y-4 animate-fade-in">
+                    <div className="border border-dashed border-border rounded-xl p-4 bg-muted/5 space-y-4">
                       {/* Clickable Header for Reposición */}
                       <div 
                         onClick={() => toggleSpaceCollapse(`reposicion-${prop.id}`)}
@@ -2058,11 +2086,11 @@ export default function DashboardClient({
         onClose={() => setIsShoppingListOpen(false)}
         title="Lista de Compras Automática"
       >
-        <div className="space-y-6 max-h-[70vh] overflow-y-auto pr-1">
+        <div className="space-y-6 max-h-[65vh] overflow-y-auto pr-1">
           <div className="p-4 border border-amber-500/10 bg-amber-500/5 text-amber-800 dark:text-amber-300 text-xs rounded-xl leading-relaxed flex items-start gap-2.5">
             <AlertTriangle className="w-4 h-4 shrink-0 text-amber-500 mt-0.5" />
             <div>
-              <span className="font-bold">Staff On-The-Go</span>: Ve marcando los insumos a medida que los compras en el supermercado. Al terminar, presiona el botón verde para registrar todo automáticamente en el inventario.
+              <span className="font-bold">Checklist Flexible</span>: Marca los ítems y escribe la **cantidad real comprada** en el recuadro. Si compras menos de lo faltante, se guardará la diferencia para la próxima lista.
             </div>
           </div>
 
@@ -2091,37 +2119,68 @@ export default function DashboardClient({
                           {items.map(item => {
                             const neededAmount = item.minStock - item.currentStock;
                             const isChecked = !!boughtItems[item.id];
+                            const currentQtyInput = boughtQuantities[item.id] !== undefined ? boughtQuantities[item.id] : neededAmount;
                             return (
-                              <label
+                              <div
                                 key={item.id}
+                                onClick={() => {
+                                  setBoughtItems(prev => ({
+                                    ...prev,
+                                    [item.id]: !prev[item.id]
+                                  }));
+                                }}
                                 className={cn(
-                                  "flex items-center gap-3 p-3 border border-border rounded-xl bg-background cursor-pointer hover:bg-muted/30 transition-all select-none",
+                                  "flex items-center justify-between gap-3 p-3 border border-border rounded-xl bg-background cursor-pointer hover:bg-muted/30 transition-all select-none",
                                   isChecked && "bg-emerald-500/5 border-emerald-500/20 dark:bg-emerald-950/20"
                                 )}
                               >
-                                <input
-                                  type="checkbox"
-                                  checked={isChecked}
-                                  onChange={() => {
-                                    setBoughtItems(prev => ({
-                                      ...prev,
-                                      [item.id]: !prev[item.id]
-                                    }));
-                                  }}
-                                  className="w-4 h-4 rounded text-primary focus:ring-ring border-border shrink-0 cursor-pointer"
-                                />
-                                <div className="flex-1 min-w-0">
-                                  <span className={cn(
-                                    "text-xs font-semibold text-foreground",
-                                    isChecked && "line-through text-muted-foreground"
-                                  )}>
-                                    {item.name}
-                                  </span>
-                                  <span className="text-[10px] text-muted-foreground block mt-0.5">
-                                    Comprar: <strong className="text-foreground">{neededAmount} {item.unit}</strong> (Stock: {item.currentStock} / Mín: {item.minStock})
-                                  </span>
+                                <div className="flex items-center gap-3 min-w-0 flex-1">
+                                  <input
+                                    type="checkbox"
+                                    checked={isChecked}
+                                    onChange={() => {}} // handled by parent click
+                                    className="w-4 h-4 rounded text-primary focus:ring-ring border-border shrink-0 cursor-pointer"
+                                  />
+                                  <div className="min-w-0">
+                                    <span className={cn(
+                                      "text-xs font-semibold text-foreground block truncate",
+                                      isChecked && "line-through text-muted-foreground"
+                                    )}>
+                                      {item.name}
+                                    </span>
+                                    <span className="text-[10px] text-muted-foreground block mt-0.5">
+                                      Faltan: <strong className="text-foreground">{neededAmount} {item.unit}</strong> (Stock: {item.currentStock} / Mín: {item.minStock})
+                                    </span>
+                                  </div>
                                 </div>
-                              </label>
+
+                                {/* Custom Quantity Input (stops propagation so clicking it doesn't uncheck the item) */}
+                                <div 
+                                  className="flex items-center gap-1.5 shrink-0"
+                                  onClick={e => e.stopPropagation()}
+                                >
+                                  <span className="text-[10px] text-muted-foreground font-semibold">Comprar:</span>
+                                  <input
+                                    type="number"
+                                    min="1"
+                                    max="999"
+                                    value={currentQtyInput}
+                                    onChange={(e) => {
+                                      const val = Math.max(0, parseInt(e.target.value) || 0);
+                                      setBoughtQuantities(prev => ({
+                                        ...prev,
+                                        [item.id]: val
+                                      }));
+                                      // Auto-check item if a positive number is typed
+                                      if (val > 0 && !isChecked) {
+                                        setBoughtItems(prev => ({ ...prev, [item.id]: true }));
+                                      }
+                                    }}
+                                    className="w-14 bg-background border border-border rounded-lg px-2 py-1 text-xs text-center font-extrabold focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary h-8"
+                                  />
+                                  <span className="text-[10px] text-muted-foreground uppercase font-bold shrink-0">{item.unit.substring(0, 3)}</span>
+                                </div>
+                              </div>
                             );
                           })}
                         </div>
@@ -2136,37 +2195,66 @@ export default function DashboardClient({
                           {reposicion.map(item => {
                             const neededAmount = item.minStock - item.currentStock;
                             const isChecked = !!boughtItems[item.id];
+                            const currentQtyInput = boughtQuantities[item.id] !== undefined ? boughtQuantities[item.id] : neededAmount;
                             return (
-                              <label
+                              <div
                                 key={item.id}
+                                onClick={() => {
+                                  setBoughtItems(prev => ({
+                                    ...prev,
+                                    [item.id]: !prev[item.id]
+                                  }));
+                                }}
                                 className={cn(
-                                  "flex items-center gap-3 p-3 border border-border rounded-xl bg-background cursor-pointer hover:bg-muted/30 transition-all select-none",
+                                  "flex items-center justify-between gap-3 p-3 border border-border rounded-xl bg-background cursor-pointer hover:bg-muted/30 transition-all select-none",
                                   isChecked && "bg-emerald-500/5 border-emerald-500/20 dark:bg-emerald-950/20"
                                 )}
                               >
-                                <input
-                                  type="checkbox"
-                                  checked={isChecked}
-                                  onChange={() => {
-                                    setBoughtItems(prev => ({
-                                      ...prev,
-                                      [item.id]: !prev[item.id]
-                                    }));
-                                  }}
-                                  className="w-4 h-4 rounded text-primary focus:ring-ring border-border shrink-0 cursor-pointer"
-                                />
-                                <div className="flex-1 min-w-0">
-                                  <span className={cn(
-                                    "text-xs font-semibold text-foreground",
-                                    isChecked && "line-through text-muted-foreground"
-                                  )}>
-                                    {item.name}
-                                  </span>
-                                  <span className="text-[10px] text-muted-foreground block mt-0.5">
-                                    Comprar: <strong className="text-foreground">{neededAmount} {item.unit}</strong> (Stock: {item.currentStock} / Mín: {item.minStock})
-                                  </span>
+                                <div className="flex items-center gap-3 min-w-0 flex-1">
+                                  <input
+                                    type="checkbox"
+                                    checked={isChecked}
+                                    onChange={() => {}} // handled by parent click
+                                    className="w-4 h-4 rounded text-primary focus:ring-ring border-border shrink-0 cursor-pointer"
+                                  />
+                                  <div className="min-w-0">
+                                    <span className={cn(
+                                      "text-xs font-semibold text-foreground block truncate",
+                                      isChecked && "line-through text-muted-foreground"
+                                    )}>
+                                      {item.name}
+                                    </span>
+                                    <span className="text-[10px] text-muted-foreground block mt-0.5">
+                                      Faltan: <strong className="text-foreground">{neededAmount} {item.unit}</strong> (Stock: {item.currentStock} / Mín: {item.minStock})
+                                    </span>
+                                  </div>
                                 </div>
-                              </label>
+
+                                <div 
+                                  className="flex items-center gap-1.5 shrink-0"
+                                  onClick={e => e.stopPropagation()}
+                                >
+                                  <span className="text-[10px] text-muted-foreground font-semibold">Comprar:</span>
+                                  <input
+                                    type="number"
+                                    min="1"
+                                    max="999"
+                                    value={currentQtyInput}
+                                    onChange={(e) => {
+                                      const val = Math.max(0, parseInt(e.target.value) || 0);
+                                      setBoughtQuantities(prev => ({
+                                        ...prev,
+                                        [item.id]: val
+                                      }));
+                                      if (val > 0 && !isChecked) {
+                                        setBoughtItems(prev => ({ ...prev, [item.id]: true }));
+                                      }
+                                    }}
+                                    className="w-14 bg-background border border-border rounded-lg px-2 py-1 text-xs text-center font-extrabold focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary h-8"
+                                  />
+                                  <span className="text-[10px] text-muted-foreground uppercase font-bold shrink-0">{item.unit.substring(0, 3)}</span>
+                                </div>
+                              </div>
                             );
                           })}
                         </div>
@@ -2188,7 +2276,7 @@ export default function DashboardClient({
               className="w-full bg-emerald-600 text-white font-bold py-3 rounded-xl hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:hover:bg-emerald-600 h-12 flex items-center justify-center gap-2"
             >
               <RefreshCw className={cn("w-4 h-4 shrink-0", isSubmitting && "animate-spin")} />
-              <span>Aplicar {totalCheckedPurchasesCount} Compras al Inventario</span>
+              <span>Registrar {totalCheckedPurchasesCount} Compras en el Sistema</span>
             </button>
             <button
               onClick={() => setIsShoppingListOpen(false)}
