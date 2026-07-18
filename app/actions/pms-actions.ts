@@ -159,7 +159,7 @@ export async function createProperty(formData: {
     throw new Error('El sistema PMS está limitado a un máximo de 3 propiedades.');
   }
 
-  await db.properties.create({
+  const property = await db.properties.create({
     data: {
       name: formData.name,
       address: formData.address,
@@ -167,27 +167,150 @@ export async function createProperty(formData: {
     },
   });
 
+  // Automatically create the 5 default spaces
+  const defaultSpaces = ['Habitación 1', 'Cocina', 'Comedor', 'Living', 'Baño'];
+  for (const spaceName of defaultSpaces) {
+    await db.spaces.create({
+      data: {
+        propertyId: property.id,
+        name: spaceName,
+      }
+    });
+  }
+
   revalidatePath('/dashboard');
   revalidatePath('/calendar');
+  return { success: true };
+}
+
+export async function updateProperty(formData: {
+  id: string;
+  name: string;
+  address: string;
+  colorCode: string;
+}) {
+  await db.properties.update({
+    where: { id: formData.id },
+    data: {
+      name: formData.name,
+      address: formData.address,
+      colorCode: formData.colorCode,
+    }
+  });
+
+  revalidatePath('/dashboard');
+  revalidatePath('/calendar');
+  return { success: true };
+}
+
+export async function deleteProperty(propertyId: string) {
+  await db.properties.delete({
+    where: { id: propertyId }
+  });
+
+  revalidatePath('/dashboard');
+  revalidatePath('/calendar');
+  return { success: true };
+}
+
+// SPACES
+export async function createSpace(formData: {
+  propertyId: string;
+  name: string;
+}) {
+  await db.spaces.create({
+    data: {
+      propertyId: formData.propertyId,
+      name: formData.name,
+    }
+  });
+
+  revalidatePath('/dashboard');
+  return { success: true };
+}
+
+export async function updateSpaceName(formData: {
+  id: string;
+  name: string;
+}) {
+  await db.spaces.update({
+    where: { id: formData.id },
+    data: { name: formData.name }
+  });
+
+  revalidatePath('/dashboard');
+  return { success: true };
+}
+
+export async function deleteSpace(spaceId: string) {
+  await db.spaces.delete({
+    where: { id: spaceId }
+  });
+
+  revalidatePath('/dashboard');
   return { success: true };
 }
 
 // INVENTORY ITEMS
 export async function createInventoryItem(formData: {
   propertyId: string;
+  spaceId?: string;
   name: string;
   currentStock: number;
   minStock: number;
   unit: string;
+  category?: string;
+  subCategory?: string;
 }) {
   await db.inventory.create({
     data: {
       propertyId: formData.propertyId,
+      spaceId: formData.spaceId || null,
       name: formData.name,
       currentStock: formData.currentStock,
       minStock: formData.minStock,
       unit: formData.unit,
+      category: formData.category || 'General',
+      subCategory: formData.subCategory || null,
     },
+  });
+
+  revalidatePath('/dashboard');
+  return { success: true };
+}
+
+export async function updateInventoryItem(formData: {
+  id: string;
+  propertyId: string;
+  spaceId?: string;
+  name: string;
+  currentStock: number;
+  minStock: number;
+  unit: string;
+  category?: string;
+  subCategory?: string;
+}) {
+  await db.inventory.update({
+    where: { id: formData.id },
+    data: {
+      propertyId: formData.propertyId,
+      spaceId: formData.spaceId || null,
+      name: formData.name,
+      currentStock: formData.currentStock,
+      minStock: formData.minStock,
+      unit: formData.unit,
+      category: formData.category || 'General',
+      subCategory: formData.subCategory || null,
+    },
+  });
+
+  revalidatePath('/dashboard');
+  return { success: true };
+}
+
+export async function deleteInventoryItem(itemId: string) {
+  await db.inventory.delete({
+    where: { id: itemId }
   });
 
   revalidatePath('/dashboard');

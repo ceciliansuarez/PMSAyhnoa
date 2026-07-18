@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { 
   Building2, Plus, ArrowUpRight, ArrowDownRight, 
   CheckCircle2, Clock, AlertTriangle, PackagePlus, 
-  DollarSign, ClipboardList, CalendarPlus, ShieldAlert, Sparkles
+  DollarSign, ClipboardList, CalendarPlus, ShieldAlert, 
+  Pencil, Trash2, ChevronDown, ChevronUp, FolderPlus
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Drawer from './drawer';
@@ -15,11 +16,19 @@ import {
   updateTaskStatus, 
   createTask,
   createProperty,
-  createInventoryItem
+  updateProperty,
+  deleteProperty,
+  createSpace,
+  updateSpaceName,
+  deleteSpace,
+  createInventoryItem,
+  updateInventoryItem,
+  deleteInventoryItem
 } from '@/app/actions/pms-actions';
 
 interface DashboardClientProps {
   properties: any[];
+  spaces: any[];
   bookings: any[];
   inventory: any[];
   finances: any[];
@@ -33,6 +42,7 @@ interface DashboardClientProps {
 
 export default function DashboardClient({
   properties,
+  spaces,
   bookings,
   inventory,
   finances,
@@ -44,18 +54,36 @@ export default function DashboardClient({
   
   // Drawer visibility states
   const [isPropertyOpen, setIsPropertyOpen] = useState(false);
+  const [isEditPropertyOpen, setIsEditPropertyOpen] = useState(false);
   const [isBookingOpen, setIsBookingOpen] = useState(false);
   const [isFinanceOpen, setIsFinanceOpen] = useState(false);
   const [isTaskOpen, setIsTaskOpen] = useState(false);
   const [isInventoryOpen, setIsInventoryOpen] = useState(false);
   const [isNewInventoryOpen, setIsNewInventoryOpen] = useState(false);
+  const [isEditInventoryOpen, setIsEditInventoryOpen] = useState(false);
+  
+  // Space manager states
+  const [isNewSpaceOpen, setIsNewSpaceOpen] = useState(false);
+  const [isEditSpaceOpen, setIsEditSpaceOpen] = useState(false);
+
+  // Selected entities for edit
+  const [selectedPropertyForEdit, setSelectedPropertyForEdit] = useState<any>(null);
   const [selectedInventoryItem, setSelectedInventoryItem] = useState<any>(null);
+  const [selectedInventoryItemForEdit, setSelectedInventoryItemForEdit] = useState<any>(null);
+  const [selectedSpaceForEdit, setSelectedSpaceForEdit] = useState<any>(null);
 
   // Form states
   const [propertyForm, setPropertyForm] = useState({
     name: '',
     address: '',
-    colorCode: '#10b981', // Default emerald
+    colorCode: '#10b981',
+  });
+
+  const [editPropertyForm, setEditPropertyForm] = useState({
+    id: '',
+    name: '',
+    address: '',
+    colorCode: '#10b981',
   });
 
   const [bookingForm, setBookingForm] = useState({
@@ -87,15 +115,56 @@ export default function DashboardClient({
 
   const [inventoryForm, setInventoryForm] = useState({
     propertyId: properties[0]?.id || '',
+    spaceId: '', // space id or empty (for Reposición)
     name: '',
     currentStock: '',
     minStock: '',
     unit: 'unidades',
+    category: 'General', // General, Reposición
+    subCategory: '', // Used for Cocina (vajilla, etc.)
+  });
+
+  const [editInventoryForm, setEditInventoryForm] = useState({
+    id: '',
+    propertyId: '',
+    spaceId: '',
+    name: '',
+    currentStock: '',
+    minStock: '',
+    unit: 'unidades',
+    category: 'General',
+    subCategory: '',
+  });
+
+  const [newSpaceForm, setNewSpaceForm] = useState({
+    propertyId: '',
+    name: '',
+  });
+
+  const [editSpaceForm, setEditSpaceForm] = useState({
+    id: '',
+    name: '',
+  });
+
+  // Kitchen sub-categories accordion expanded states
+  const [expandedKitchenSections, setExpandedKitchenSections] = useState<Record<string, boolean>>({
+    'Vajilla y Cubertería': false,
+    'Utensilios y Menaje': false,
+    'Electrodomésticos': false,
+    'Consumibles': true,
+    'Otros': false,
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Calculations for current statuses
+  const toggleKitchenSection = (section: string) => {
+    setExpandedKitchenSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
+
+  // Calculations for current occupancy statuses
   const getPropertyStatus = (propertyId: string, propBookings: any[]) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -142,18 +211,40 @@ export default function DashboardClient({
         address: '',
         colorCode: '#10b981'
       });
-      
-      // Update form default selected property if it was empty
-      const updatedProps = [...properties];
-      const newPropId = updatedProps.length > 0 ? updatedProps[0].id : '';
-      setBookingForm(prev => prev.propertyId ? prev : { ...prev, propertyId: newPropId });
-      setFinanceForm(prev => prev.propertyId ? prev : { ...prev, propertyId: newPropId });
-      setTaskForm(prev => prev.propertyId ? prev : { ...prev, propertyId: newPropId });
-      setInventoryForm(prev => prev.propertyId ? prev : { ...prev, propertyId: newPropId });
     } catch (err) {
       console.error(err);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleEditPropertySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editPropertyForm.id || !editPropertyForm.name || !editPropertyForm.address) return;
+    setIsSubmitting(true);
+    try {
+      await updateProperty({
+        id: editPropertyForm.id,
+        name: editPropertyForm.name,
+        address: editPropertyForm.address,
+        colorCode: editPropertyForm.colorCode
+      });
+      setIsEditPropertyOpen(false);
+      setSelectedPropertyForEdit(null);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeletePropertyClick = async (propertyId: string, propertyName: string) => {
+    if (confirm(`¿Estás seguro de que deseas eliminar la propiedad "${propertyName}"? Se borrarán todas las reservas, finanzas, tareas, inventario y ambientes asociados.`)) {
+      try {
+        await deleteProperty(propertyId);
+      } catch (err) {
+        console.error(err);
+      }
     }
   };
 
@@ -251,27 +342,76 @@ export default function DashboardClient({
     e.preventDefault();
     const activePropId = inventoryForm.propertyId || properties[0]?.id;
     if (!activePropId || !inventoryForm.name || !inventoryForm.currentStock || !inventoryForm.minStock) return;
+    
+    const targetSpace = spaces.find(s => s.id === inventoryForm.spaceId);
+    const isKitchen = targetSpace?.name.toLowerCase() === 'cocina';
+    
     setIsSubmitting(true);
     try {
       await createInventoryItem({
         propertyId: activePropId,
+        spaceId: inventoryForm.category === 'Reposición' ? undefined : inventoryForm.spaceId,
         name: inventoryForm.name,
         currentStock: parseInt(inventoryForm.currentStock),
         minStock: parseInt(inventoryForm.minStock),
-        unit: inventoryForm.unit
+        unit: inventoryForm.unit,
+        category: inventoryForm.category,
+        subCategory: isKitchen ? inventoryForm.subCategory : undefined
       });
       setIsNewInventoryOpen(false);
       setInventoryForm({
         propertyId: properties[0]?.id || '',
+        spaceId: '',
         name: '',
         currentStock: '',
         minStock: '',
-        unit: 'unidades'
+        unit: 'unidades',
+        category: 'General',
+        subCategory: ''
       });
     } catch (err) {
       console.error(err);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleEditInventorySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editInventoryForm.id || !editInventoryForm.name || !editInventoryForm.currentStock || !editInventoryForm.minStock) return;
+    
+    const targetSpace = spaces.find(s => s.id === editInventoryForm.spaceId);
+    const isKitchen = targetSpace?.name.toLowerCase() === 'cocina';
+
+    setIsSubmitting(true);
+    try {
+      await updateInventoryItem({
+        id: editInventoryForm.id,
+        propertyId: editInventoryForm.propertyId,
+        spaceId: editInventoryForm.category === 'Reposición' ? undefined : editInventoryForm.spaceId,
+        name: editInventoryForm.name,
+        currentStock: parseInt(editInventoryForm.currentStock),
+        minStock: parseInt(editInventoryForm.minStock),
+        unit: editInventoryForm.unit,
+        category: editInventoryForm.category,
+        subCategory: isKitchen ? editInventoryForm.subCategory : undefined
+      });
+      setIsEditInventoryOpen(false);
+      setSelectedInventoryItemForEdit(null);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteInventoryClick = async (itemId: string, itemName: string) => {
+    if (confirm(`¿Estás seguro de que deseas eliminar el insumo "${itemName}" del inventario?`)) {
+      try {
+        await deleteInventoryItem(itemId);
+      } catch (err) {
+        console.error(err);
+      }
     }
   };
 
@@ -297,11 +437,65 @@ export default function DashboardClient({
     }
   };
 
-  // Ensure default selects are populated after properties load
+  // SPACE HANDLERS
+  const handleNewSpaceSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newSpaceForm.propertyId || !newSpaceForm.name) return;
+    setIsSubmitting(true);
+    try {
+      await createSpace({
+        propertyId: newSpaceForm.propertyId,
+        name: newSpaceForm.name
+      });
+      setIsNewSpaceOpen(false);
+      setNewSpaceForm({ propertyId: '', name: '' });
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleEditSpaceSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editSpaceForm.id || !editSpaceForm.name) return;
+    setIsSubmitting(true);
+    try {
+      await updateSpaceName({
+        id: editSpaceForm.id,
+        name: editSpaceForm.name
+      });
+      setIsEditSpaceOpen(false);
+      setSelectedSpaceForEdit(null);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteSpaceClick = async (spaceId: string, spaceName: string) => {
+    if (confirm(`¿Estás seguro de que deseas eliminar el ambiente "${spaceName}"? Todos los insumos de inventario que estén asignados a este ambiente serán eliminados también.`)) {
+      try {
+        await deleteSpace(spaceId);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+  };
+
+  // Helper variables for selects
   const activePropertyIdForBooking = bookingForm.propertyId || properties[0]?.id || '';
   const activePropertyIdForFinance = financeForm.propertyId || properties[0]?.id || '';
   const activePropertyIdForTask = taskForm.propertyId || properties[0]?.id || '';
-  const activePropertyIdForInventory = inventoryForm.propertyId || properties[0]?.id || '';
+
+  // Get dynamic spaces based on chosen property in forms
+  const spacesForSelectedPropertyInNewItem = spaces.filter(s => s.propertyId === (inventoryForm.propertyId || properties[0]?.id));
+  const spacesForSelectedPropertyInEditItem = spaces.filter(s => s.propertyId === (editInventoryForm.propertyId || properties[0]?.id));
+
+  // Check if current space selected is Kitchen
+  const isKitchenSelectedInNewItem = spaces.find(s => s.id === inventoryForm.spaceId)?.name.toLowerCase() === 'cocina';
+  const isKitchenSelectedInEditItem = spaces.find(s => s.id === editInventoryForm.spaceId)?.name.toLowerCase() === 'cocina';
 
   return (
     <div className="space-y-6">
@@ -413,8 +607,38 @@ export default function DashboardClient({
                           className="absolute top-0 left-0 right-0 h-1.5 rounded-t-2xl"
                           style={{ backgroundColor: prop.colorCode }}
                         />
-                        <div className="flex-1 mt-2">
-                          <h4 className="font-bold text-base truncate">{prop.name}</h4>
+                        
+                        {/* Edit/Delete overlay buttons */}
+                        <div className="absolute top-3 right-3 flex items-center gap-1 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={() => {
+                              setSelectedPropertyForEdit(prop);
+                              setEditPropertyForm({
+                                id: prop.id,
+                                name: prop.name,
+                                address: prop.address,
+                                colorCode: prop.colorCode
+                              });
+                              setIsEditPropertyOpen(true);
+                            }}
+                            className="p-1.5 bg-background hover:bg-muted border border-border rounded-lg text-muted-foreground hover:text-foreground transition-colors"
+                            title="Editar propiedad"
+                            style={{ minWidth: '32px', minHeight: '32px' }}
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => handleDeletePropertyClick(prop.id, prop.name)}
+                            className="p-1.5 bg-background hover:bg-rose-50 border border-border hover:border-rose-200 rounded-lg text-muted-foreground hover:text-rose-600 transition-colors"
+                            title="Eliminar propiedad"
+                            style={{ minWidth: '32px', minHeight: '32px' }}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+
+                        <div className="flex-1 mt-3">
+                          <h4 className="font-bold text-base truncate pr-14">{prop.name}</h4>
                           <p className="text-xs text-muted-foreground truncate mb-4">{prop.address}</p>
                         </div>
                         
@@ -466,7 +690,7 @@ export default function DashboardClient({
                         <button
                           onClick={() => toggleTask(task.id, task.status)}
                           className="mt-0.5 flex-shrink-0 w-6 h-6 rounded-full border border-muted-foreground/30 flex items-center justify-center hover:border-primary active:scale-90 transition-all"
-                          style={{ minWidth: '44px', minHeight: '44px', margin: '-10px' }} // touch padding
+                          style={{ minWidth: '44px', minHeight: '44px', margin: '-10px' }}
                         >
                           <div className="w-8 h-8 flex items-center justify-center">
                             {task.status === 'COMPLETED' ? (
@@ -688,63 +912,262 @@ export default function DashboardClient({
 
       {/* INVENTORY PANEL */}
       {activeTab === 'inventory' && (
-        <div className="space-y-4">
+        <div className="space-y-6">
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-bold">Inventario de Propiedades</h3>
             {properties.length > 0 && (
               <button
-                onClick={() => setIsNewInventoryOpen(true)}
-                className="flex items-center gap-1.5 bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-border px-3.5 py-2 rounded-xl text-xs font-semibold transition-all active:scale-95 h-10"
+                onClick={() => {
+                  setInventoryForm(prev => ({
+                    ...prev,
+                    propertyId: properties[0].id,
+                    spaceId: spaces.filter(s => s.propertyId === properties[0].id)[0]?.id || '',
+                    category: 'General'
+                  }));
+                  setIsNewInventoryOpen(true);
+                }}
+                className="flex items-center gap-1.5 bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-border px-3.5 py-2 rounded-xl text-xs font-semibold transition-all active:scale-95 h-10 animate-fade-in"
               >
                 <Plus className="w-4 h-4" />
                 <span>Nuevo Insumo</span>
               </button>
             )}
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+          <div className="grid grid-cols-1 gap-6">
             {properties.map((prop) => {
+              const propSpaces = spaces.filter(s => s.propertyId === prop.id);
               const propInventory = inventory.filter(i => i.propertyId === prop.id);
+              
+              // Filter general restocking items (no spaceId)
+              const reposicionItems = propInventory.filter(i => i.category === 'Reposición');
+
               return (
-                <div key={prop.id} className="bg-card border border-border rounded-2xl p-5 space-y-4">
-                  <h4 className="font-bold text-sm flex items-center gap-2 pb-2 border-b border-border/60">
-                    <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: prop.colorCode }} />
-                    {prop.name}
-                  </h4>
-                  <div className="space-y-3">
-                    {propInventory.length === 0 ? (
-                      <p className="text-xs text-muted-foreground text-center py-4">Sin inventario registrado.</p>
-                    ) : (
-                      propInventory.map(item => {
-                        const isLow = item.currentStock <= item.minStock;
-                        return (
-                          <div 
-                            key={item.id} 
-                            onClick={() => {
-                              setSelectedInventoryItem(item);
-                              setIsInventoryOpen(true);
-                            }}
-                            className={cn(
-                              "p-3 rounded-xl border border-border hover:bg-muted/40 cursor-pointer transition-all flex items-center justify-between active:scale-[0.98]",
-                              isLow && "border-amber-500/30 bg-amber-500/5 hover:border-amber-500/50"
-                            )}
-                          >
-                            <div className="min-w-0 pr-2">
-                              <span className="font-semibold text-xs block truncate">{item.name}</span>
-                              <span className="text-[10px] text-muted-foreground">Mínimo: {item.minStock} {item.unit}</span>
-                            </div>
-                            <div className="text-right shrink-0">
-                              <span className={cn(
-                                "font-bold text-sm",
-                                isLow ? "text-amber-600 dark:text-amber-400" : "text-foreground"
-                              )}>
-                                {item.currentStock}
+                <div key={prop.id} className="bg-card border border-border rounded-2xl p-5 space-y-6">
+                  {/* Property Header */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border/60">
+                    <h4 className="font-extrabold text-base flex items-center gap-2">
+                      <span className="w-3.5 h-3.5 rounded-full shrink-0" style={{ backgroundColor: prop.colorCode }} />
+                      {prop.name}
+                    </h4>
+                    
+                    <button
+                      onClick={() => {
+                        setNewSpaceForm({ propertyId: prop.id, name: '' });
+                        setIsNewSpaceOpen(true);
+                      }}
+                      className="inline-flex items-center gap-1 text-[11px] font-bold text-primary bg-primary/5 hover:bg-primary/10 border border-primary/20 px-3 py-1.5 rounded-xl transition-all"
+                    >
+                      <FolderPlus className="w-3.5 h-3.5" />
+                      <span>+ Añadir Ambiente</span>
+                    </button>
+                  </div>
+
+                  {/* Spaces / Ambientes Grid */}
+                  <div className="space-y-5">
+                    {/* 1. Normal spaces */}
+                    {propSpaces.map((space) => {
+                      const spaceItems = propInventory.filter(i => i.spaceId === space.id && i.category !== 'Reposición');
+                      const isKitchen = space.name.toLowerCase() === 'cocina';
+
+                      return (
+                        <div key={space.id} className="border border-border/80 rounded-xl p-4 bg-muted/10 space-y-4">
+                          {/* Space Header with options to Edit Name/Delete Space */}
+                          <div className="flex items-center justify-between pb-2 border-b border-border/40">
+                            <span className="font-bold text-sm text-foreground flex items-center gap-2">
+                              {space.name}
+                              <span className="text-[10px] bg-muted px-2 py-0.5 rounded-full text-muted-foreground font-semibold">
+                                {spaceItems.length}
                               </span>
-                              <span className="text-[9px] block text-muted-foreground">{item.unit}</span>
+                            </span>
+                            
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                onClick={() => {
+                                  setSelectedSpaceForEdit(space);
+                                  setEditSpaceForm({ id: space.id, name: space.name });
+                                  setIsEditSpaceOpen(true);
+                                }}
+                                className="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors"
+                                title="Editar nombre del ambiente"
+                                style={{ minWidth: '28px', minHeight: '28px' }}
+                              >
+                                <Pencil className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteSpaceClick(space.id, space.name)}
+                                className="p-1 hover:bg-rose-50 rounded text-muted-foreground hover:text-rose-600 transition-colors"
+                                title="Eliminar ambiente"
+                                style={{ minWidth: '28px', minHeight: '28px' }}
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
                             </div>
                           </div>
-                        );
-                      })
-                    )}
+
+                          {/* Space items list */}
+                          {isKitchen ? (
+                            /* Advanced accordion group layout for Kitchen items */
+                            <div className="space-y-2">
+                              {[
+                                { id: 'Vajilla y Cubertería', emoji: '🍽️', label: 'Vajilla y Cubertería' },
+                                { id: 'Utensilios y Menaje', emoji: '🍳', label: 'Utensilios y Menaje' },
+                                { id: 'Electrodomésticos', emoji: '🔌', label: 'Electrodomésticos' },
+                                { id: 'Consumibles', emoji: '🧼', label: 'Consumibles e Insumos' },
+                                { id: 'Otros', emoji: '📦', label: 'Otros Insumos de Cocina' },
+                              ].map((subGroup) => {
+                                const subGroupItems = spaceItems.filter(i => {
+                                  if (subGroup.id === 'Otros') {
+                                    return !i.subCategory || !['Vajilla y Cubertería', 'Utensilios y Menaje', 'Electrodomésticos', 'Consumibles'].includes(i.subCategory);
+                                  }
+                                  return i.subCategory === subGroup.id;
+                                });
+
+                                const isOpen = expandedKitchenSections[subGroup.id];
+
+                                return (
+                                  <div key={subGroup.id} className="border border-border/50 rounded-xl overflow-hidden bg-background">
+                                    {/* Sub-Category Accordion Trigger */}
+                                    <button
+                                      type="button"
+                                      onClick={() => toggleKitchenSection(subGroup.id)}
+                                      className="w-full flex items-center justify-between p-3 text-xs font-bold hover:bg-muted/30 transition-colors h-11 text-left"
+                                    >
+                                      <span className="flex items-center gap-2">
+                                        <span>{subGroup.emoji}</span>
+                                        <span>{subGroup.label}</span>
+                                        <span className="text-[10px] text-muted-foreground font-semibold">
+                                          ({subGroupItems.length})
+                                        </span>
+                                      </span>
+                                      {isOpen ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+                                    </button>
+
+                                    {/* Sub-Category items */}
+                                    {isOpen && (
+                                      <div className="p-3 border-t border-border/40 divide-y divide-border/40 bg-muted/5">
+                                        {subGroupItems.length === 0 ? (
+                                          <p className="text-[11px] text-muted-foreground text-center py-3">No hay elementos en esta categoría.</p>
+                                        ) : (
+                                          subGroupItems.map(item => (
+                                            <InventoryItemRow 
+                                              key={item.id} 
+                                              item={item} 
+                                              onAdjust={handleStockAdjust} 
+                                              onEdit={(it) => {
+                                                setSelectedInventoryItemForEdit(it);
+                                                setEditInventoryForm({
+                                                  id: it.id,
+                                                  propertyId: it.propertyId,
+                                                  spaceId: it.spaceId || '',
+                                                  name: it.name,
+                                                  currentStock: it.currentStock.toString(),
+                                                  minStock: it.minStock.toString(),
+                                                  unit: it.unit,
+                                                  category: it.category,
+                                                  subCategory: it.subCategory || ''
+                                                });
+                                                setIsEditInventoryOpen(true);
+                                              }}
+                                              onDelete={handleDeleteInventoryClick}
+                                              onOpenAdjust={(it) => {
+                                                setSelectedInventoryItem(it);
+                                                setIsInventoryOpen(true);
+                                              }}
+                                            />
+                                          ))
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          ) : (
+                            /* Flat list for normal spaces */
+                            <div className="divide-y divide-border/40 bg-background rounded-xl border border-border/50 p-2">
+                              {spaceItems.length === 0 ? (
+                                <p className="text-xs text-muted-foreground text-center py-4">Sin insumos registrados.</p>
+                              ) : (
+                                spaceItems.map(item => (
+                                  <InventoryItemRow 
+                                    key={item.id} 
+                                    item={item} 
+                                    onAdjust={handleStockAdjust} 
+                                    onEdit={(it) => {
+                                      setSelectedInventoryItemForEdit(it);
+                                      setEditInventoryForm({
+                                        id: it.id,
+                                        propertyId: it.propertyId,
+                                        spaceId: it.spaceId || '',
+                                        name: it.name,
+                                        currentStock: it.currentStock.toString(),
+                                        minStock: it.minStock.toString(),
+                                        unit: it.unit,
+                                        category: it.category,
+                                        subCategory: it.subCategory || ''
+                                      });
+                                      setIsEditInventoryOpen(true);
+                                    }}
+                                    onDelete={handleDeleteInventoryClick}
+                                    onOpenAdjust={(it) => {
+                                      setSelectedInventoryItem(it);
+                                      setIsInventoryOpen(true);
+                                    }}
+                                  />
+                                ))
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+
+                    {/* 2. Reposición Category (Static block) */}
+                    <div className="border border-dashed border-border rounded-xl p-4 bg-muted/5 space-y-4">
+                      <div className="pb-2 border-b border-border/40">
+                        <span className="font-extrabold text-sm text-muted-foreground flex items-center gap-2">
+                          📦 Reposición y Carga General
+                          <span className="text-[10px] bg-muted px-2 py-0.5 rounded-full text-muted-foreground font-semibold">
+                            {reposicionItems.length}
+                          </span>
+                        </span>
+                      </div>
+
+                      <div className="divide-y divide-border/40 bg-background rounded-xl border border-border/50 p-2">
+                        {reposicionItems.length === 0 ? (
+                          <p className="text-xs text-muted-foreground text-center py-4">No hay insumos generales de reposición.</p>
+                        ) : (
+                          reposicionItems.map(item => (
+                            <InventoryItemRow 
+                              key={item.id} 
+                              item={item} 
+                              onAdjust={handleStockAdjust} 
+                              onEdit={(it) => {
+                                setSelectedInventoryItemForEdit(it);
+                                setEditInventoryForm({
+                                  id: it.id,
+                                  propertyId: it.propertyId,
+                                  spaceId: it.spaceId || '',
+                                  name: it.name,
+                                  currentStock: it.currentStock.toString(),
+                                  minStock: it.minStock.toString(),
+                                  unit: it.unit,
+                                  category: it.category,
+                                  subCategory: it.subCategory || ''
+                                });
+                                setIsEditInventoryOpen(true);
+                              }}
+                              onDelete={handleDeleteInventoryClick}
+                              onOpenAdjust={(it) => {
+                                setSelectedInventoryItem(it);
+                                setIsInventoryOpen(true);
+                              }}
+                            />
+                          ))
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
               );
@@ -893,6 +1316,145 @@ export default function DashboardClient({
         </form>
       </Drawer>
 
+      {/* 0.1. Edit Property Drawer */}
+      <Drawer
+        isOpen={isEditPropertyOpen}
+        onClose={() => {
+          setIsEditPropertyOpen(false);
+          setSelectedPropertyForEdit(null);
+        }}
+        title="Editar Propiedad"
+      >
+        {selectedPropertyForEdit && (
+          <form onSubmit={handleEditPropertySubmit} className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-muted-foreground uppercase">Nombre de la Propiedad</label>
+              <input
+                type="text"
+                required
+                value={editPropertyForm.name}
+                onChange={(e) => setEditPropertyForm({ ...editPropertyForm, name: e.target.value })}
+                className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                style={{ minHeight: '44px' }}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-muted-foreground uppercase">Dirección</label>
+              <input
+                type="text"
+                required
+                value={editPropertyForm.address}
+                onChange={(e) => setEditPropertyForm({ ...editPropertyForm, address: e.target.value })}
+                className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                style={{ minHeight: '44px' }}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-muted-foreground uppercase">Tema de Color</label>
+              <div className="grid grid-cols-5 gap-2 pt-1">
+                {[
+                  { name: 'Esmeralda', hex: '#10b981' },
+                  { name: 'Índigo', hex: '#6366f1' },
+                  { name: 'Cielo', hex: '#0ea5e9' },
+                  { name: 'Rosa', hex: '#f43f5e' },
+                  { name: 'Ámbar', hex: '#f59e0b' }
+                ].map((color) => (
+                  <button
+                    key={color.hex}
+                    type="button"
+                    onClick={() => setEditPropertyForm({ ...editPropertyForm, colorCode: color.hex })}
+                    className={cn(
+                      "w-10 h-10 rounded-xl flex items-center justify-center border-2 transition-all active:scale-95",
+                      editPropertyForm.colorCode === color.hex 
+                        ? "border-primary scale-110 shadow-sm" 
+                        : "border-transparent hover:border-muted-foreground/30"
+                    )}
+                    style={{ backgroundColor: color.hex }}
+                    title={color.name}
+                  />
+                ))}
+              </div>
+            </div>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full bg-primary text-primary-foreground font-semibold py-3 rounded-xl hover:bg-primary/95 transition-colors disabled:opacity-50 h-12 mt-4"
+            >
+              {isSubmitting ? 'Guardando...' : 'Guardar Cambios'}
+            </button>
+          </form>
+        )}
+      </Drawer>
+
+      {/* 0.2. New Space Drawer */}
+      <Drawer
+        isOpen={isNewSpaceOpen}
+        onClose={() => setIsNewSpaceOpen(false)}
+        title="Crear Nuevo Ambiente"
+      >
+        <form onSubmit={handleNewSpaceSubmit} className="space-y-4">
+          <input type="hidden" value={newSpaceForm.propertyId} />
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-muted-foreground uppercase font-semibold">Propiedad</label>
+            <div className="p-3 bg-muted/30 border border-border rounded-xl text-sm font-bold text-foreground">
+              {properties.find(p => p.id === newSpaceForm.propertyId)?.name}
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-muted-foreground uppercase">Nombre del Ambiente</label>
+            <input
+              type="text"
+              required
+              placeholder="Ej. Terraza, Cochera, Habitación 2"
+              value={newSpaceForm.name}
+              onChange={(e) => setNewSpaceForm({ ...newSpaceForm, name: e.target.value })}
+              className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              style={{ minHeight: '44px' }}
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full bg-primary text-primary-foreground font-semibold py-3 rounded-xl hover:bg-primary/95 transition-colors disabled:opacity-50 h-12 mt-4"
+          >
+            {isSubmitting ? 'Guardando...' : 'Crear Ambiente'}
+          </button>
+        </form>
+      </Drawer>
+
+      {/* 0.3. Edit Space Drawer */}
+      <Drawer
+        isOpen={isEditSpaceOpen}
+        onClose={() => {
+          setIsEditSpaceOpen(false);
+          setSelectedSpaceForEdit(null);
+        }}
+        title="Editar Nombre del Ambiente"
+      >
+        {selectedSpaceForEdit && (
+          <form onSubmit={handleEditSpaceSubmit} className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-muted-foreground uppercase">Nuevo Nombre</label>
+              <input
+                type="text"
+                required
+                value={editSpaceForm.name}
+                onChange={(e) => setEditSpaceForm({ ...editSpaceForm, name: e.target.value })}
+                className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                style={{ minHeight: '44px' }}
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full bg-primary text-primary-foreground font-semibold py-3 rounded-xl hover:bg-primary/95 transition-colors disabled:opacity-50 h-12 mt-4"
+            >
+              {isSubmitting ? 'Guardando...' : 'Guardar Cambios'}
+            </button>
+          </form>
+        )}
+      </Drawer>
+
       {/* 0.5. New Inventory Item Drawer */}
       <Drawer
         isOpen={isNewInventoryOpen}
@@ -916,31 +1478,79 @@ export default function DashboardClient({
           </div>
         ) : (
           <form onSubmit={handleInventorySubmit} className="space-y-4">
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-muted-foreground uppercase">Propiedad</label>
-              <select
-                value={activePropertyIdForInventory}
-                onChange={(e) => setInventoryForm({ ...inventoryForm, propertyId: e.target.value })}
-                className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                style={{ minHeight: '44px' }}
-              >
-                {properties.map(p => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
-                ))}
-              </select>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-muted-foreground uppercase">Propiedad</label>
+                <select
+                  value={inventoryForm.propertyId}
+                  onChange={(e) => {
+                    const propId = e.target.value;
+                    const propSpaces = spaces.filter(s => s.propertyId === propId);
+                    setInventoryForm({
+                      ...inventoryForm,
+                      propertyId: propId,
+                      spaceId: propSpaces[0]?.id || ''
+                    });
+                  }}
+                  className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  style={{ minHeight: '44px' }}
+                >
+                  {properties.map(p => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-muted-foreground uppercase">Destino</label>
+                <select
+                  value={inventoryForm.category === 'Reposición' ? 'Reposición' : 'Ambiente'}
+                  onChange={(e) => {
+                    const isRepo = e.target.value === 'Reposición';
+                    setInventoryForm({
+                      ...inventoryForm,
+                      category: isRepo ? 'Reposición' : 'General',
+                      spaceId: isRepo ? '' : (spacesForSelectedPropertyInNewItem[0]?.id || '')
+                    });
+                  }}
+                  className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  style={{ minHeight: '44px' }}
+                >
+                  <option value="Ambiente">Ambiente de la Casa</option>
+                  <option value="Reposición">Reposición / Carga Gral.</option>
+                </select>
+              </div>
             </div>
+
+            {inventoryForm.category !== 'Reposición' && (
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-muted-foreground uppercase">Ambiente / Habitación</label>
+                <select
+                  value={inventoryForm.spaceId}
+                  onChange={(e) => setInventoryForm({ ...inventoryForm, spaceId: e.target.value })}
+                  className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  style={{ minHeight: '44px' }}
+                >
+                  {spacesForSelectedPropertyInNewItem.map(s => (
+                    <option key={s.id} value={s.id}>{s.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-muted-foreground uppercase">Nombre del Insumo</label>
               <input
                 type="text"
                 required
-                placeholder="Ej. Cápsulas de Café"
+                placeholder="Ej. Juego de sábanas matrimoniales, Plato trinchador"
                 value={inventoryForm.name}
                 onChange={(e) => setInventoryForm({ ...inventoryForm, name: e.target.value })}
                 className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 style={{ minHeight: '44px' }}
               />
             </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-muted-foreground uppercase">Stock Actual</label>
@@ -967,28 +1577,210 @@ export default function DashboardClient({
                 />
               </div>
             </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-muted-foreground uppercase">Unidad de Medida</label>
-              <select
-                value={inventoryForm.unit}
-                onChange={(e) => setInventoryForm({ ...inventoryForm, unit: e.target.value })}
-                className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                style={{ minHeight: '44px' }}
-              >
-                <option value="unidades">Unidades</option>
-                <option value="cápsulas">Cápsulas</option>
-                <option value="paquetes">Paquetes</option>
-                <option value="rollos">Rollos</option>
-                <option value="frascos">Frascos</option>
-                <option value="bolsas">Bolsas</option>
-              </select>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-muted-foreground uppercase">Unidad de Medida</label>
+                <select
+                  value={inventoryForm.unit}
+                  onChange={(e) => setInventoryForm({ ...inventoryForm, unit: e.target.value })}
+                  className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  style={{ minHeight: '44px' }}
+                >
+                  <option value="unidades">Unidades</option>
+                  <option value="cápsulas">Cápsulas</option>
+                  <option value="paquetes">Paquetes</option>
+                  <option value="rollos">Rollos</option>
+                  <option value="frascos">Frascos</option>
+                  <option value="bolsas">Bolsas</option>
+                </select>
+              </div>
+
+              {/* Sub-Category dropdown selector (ONLY FOR KITCHEN ITEMS) */}
+              {inventoryForm.category !== 'Reposición' && isKitchenSelectedInNewItem && (
+                <div className="space-y-1.5 animate-fade-in">
+                  <label className="text-xs font-bold text-muted-foreground uppercase">Clasificación Cocina</label>
+                  <select
+                    value={inventoryForm.subCategory}
+                    onChange={(e) => setInventoryForm({ ...inventoryForm, subCategory: e.target.value })}
+                    required
+                    className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                    style={{ minHeight: '44px' }}
+                  >
+                    <option value="">Seleccionar grupo...</option>
+                    <option value="Vajilla y Cubertería">Vajilla y Cubertería</option>
+                    <option value="Utensilios y Menaje">Utensilios y Menaje</option>
+                    <option value="Electrodomésticos">Electrodomésticos</option>
+                    <option value="Consumibles">Consumibles e Insumos</option>
+                  </select>
+                </div>
+              )}
             </div>
+
             <button
               type="submit"
               disabled={isSubmitting}
               className="w-full bg-primary text-primary-foreground font-semibold py-3 rounded-xl hover:bg-primary/95 transition-colors disabled:opacity-50 h-12 mt-4"
             >
               {isSubmitting ? 'Guardando...' : 'Agregar Insumo'}
+            </button>
+          </form>
+        )}
+      </Drawer>
+
+      {/* 0.6. Edit Inventory Item Drawer */}
+      <Drawer
+        isOpen={isEditInventoryOpen}
+        onClose={() => {
+          setIsEditInventoryOpen(false);
+          setSelectedInventoryItemForEdit(null);
+        }}
+        title="Modificar Insumo de Inventario"
+      >
+        {selectedInventoryItemForEdit && (
+          <form onSubmit={handleEditInventorySubmit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-muted-foreground uppercase">Propiedad</label>
+                <select
+                  value={editInventoryForm.propertyId}
+                  onChange={(e) => {
+                    const propId = e.target.value;
+                    const propSpaces = spaces.filter(s => s.propertyId === propId);
+                    setEditInventoryForm({
+                      ...editInventoryForm,
+                      propertyId: propId,
+                      spaceId: propSpaces[0]?.id || ''
+                    });
+                  }}
+                  className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  style={{ minHeight: '44px' }}
+                >
+                  {properties.map(p => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-muted-foreground uppercase">Destino</label>
+                <select
+                  value={editInventoryForm.category === 'Reposición' ? 'Reposición' : 'Ambiente'}
+                  onChange={(e) => {
+                    const isRepo = e.target.value === 'Reposición';
+                    setEditInventoryForm({
+                      ...editInventoryForm,
+                      category: isRepo ? 'Reposición' : 'General',
+                      spaceId: isRepo ? '' : (spacesForSelectedPropertyInEditItem[0]?.id || '')
+                    });
+                  }}
+                  className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  style={{ minHeight: '44px' }}
+                >
+                  <option value="Ambiente">Ambiente de la Casa</option>
+                  <option value="Reposición">Reposición / Carga Gral.</option>
+                </select>
+              </div>
+            </div>
+
+            {editInventoryForm.category !== 'Reposición' && (
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-muted-foreground uppercase">Ambiente / Habitación</label>
+                <select
+                  value={editInventoryForm.spaceId}
+                  onChange={(e) => setEditInventoryForm({ ...editInventoryForm, spaceId: e.target.value })}
+                  className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  style={{ minHeight: '44px' }}
+                >
+                  {spacesForSelectedPropertyInEditItem.map(s => (
+                    <option key={s.id} value={s.id}>{s.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-muted-foreground uppercase">Nombre del Insumo</label>
+              <input
+                type="text"
+                required
+                value={editInventoryForm.name}
+                onChange={(e) => setEditInventoryForm({ ...editInventoryForm, name: e.target.value })}
+                className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                style={{ minHeight: '44px' }}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-muted-foreground uppercase">Stock Actual</label>
+                <input
+                  type="number"
+                  required
+                  value={editInventoryForm.currentStock}
+                  onChange={(e) => setEditInventoryForm({ ...editInventoryForm, currentStock: e.target.value })}
+                  className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  style={{ minHeight: '44px' }}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-muted-foreground uppercase">Stock Mínimo (Alerta)</label>
+                <input
+                  type="number"
+                  required
+                  value={editInventoryForm.minStock}
+                  onChange={(e) => setEditInventoryForm({ ...editInventoryForm, minStock: e.target.value })}
+                  className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  style={{ minHeight: '44px' }}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-muted-foreground uppercase">Unidad de Medida</label>
+                <select
+                  value={editInventoryForm.unit}
+                  onChange={(e) => setEditInventoryForm({ ...editInventoryForm, unit: e.target.value })}
+                  className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  style={{ minHeight: '44px' }}
+                >
+                  <option value="unidades">Unidades</option>
+                  <option value="cápsulas">Cápsulas</option>
+                  <option value="paquetes">Paquetes</option>
+                  <option value="rollos">Rollos</option>
+                  <option value="frascos">Frascos</option>
+                  <option value="bolsas">Bolsas</option>
+                </select>
+              </div>
+
+              {/* Sub-Category dropdown selector (ONLY FOR KITCHEN ITEMS) */}
+              {editInventoryForm.category !== 'Reposición' && isKitchenSelectedInEditItem && (
+                <div className="space-y-1.5 animate-fade-in">
+                  <label className="text-xs font-bold text-muted-foreground uppercase">Clasificación Cocina</label>
+                  <select
+                    value={editInventoryForm.subCategory}
+                    onChange={(e) => setEditInventoryForm({ ...editInventoryForm, subCategory: e.target.value })}
+                    required
+                    className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                    style={{ minHeight: '44px' }}
+                  >
+                    <option value="">Seleccionar grupo...</option>
+                    <option value="Vajilla y Cubertería">Vajilla y Cubertería</option>
+                    <option value="Utensilios y Menaje">Utensilios y Menaje</option>
+                    <option value="Electrodomésticos">Electrodomésticos</option>
+                    <option value="Consumibles">Consumibles e Insumos</option>
+                  </select>
+                </div>
+              )}
+            </div>
+
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full bg-primary text-primary-foreground font-semibold py-3 rounded-xl hover:bg-primary/95 transition-colors disabled:opacity-50 h-12 mt-4"
+            >
+              {isSubmitting ? 'Guardando...' : 'Guardar Cambios'}
             </button>
           </form>
         )}
@@ -1387,6 +2179,95 @@ export default function DashboardClient({
           </div>
         )}
       </Drawer>
+    </div>
+  );
+}
+
+// Sub-component for clean rendering of each inventory row
+interface InventoryItemRowProps {
+  item: any;
+  onAdjust: (itemId: string, current: number, diff: number) => void;
+  onEdit: (item: any) => void;
+  onDelete: (itemId: string, itemName: string) => void;
+  onOpenAdjust: (item: any) => void;
+}
+
+function InventoryItemRow({ item, onAdjust, onEdit, onDelete, onOpenAdjust }: InventoryItemRowProps) {
+  const isLow = item.currentStock <= item.minStock;
+  
+  return (
+    <div className="flex items-center justify-between py-3 hover:bg-muted/30 transition-colors px-2 rounded-lg">
+      <div className="min-w-0 pr-4 flex-1">
+        <div className="flex items-center gap-2">
+          <span 
+            onClick={() => onOpenAdjust(item)}
+            className={cn(
+              "font-bold text-xs cursor-pointer hover:underline text-foreground",
+              isLow && "text-amber-600 dark:text-amber-400 font-extrabold"
+            )}
+          >
+            {item.name}
+          </span>
+          {isLow && (
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" title="Bajo stock" />
+          )}
+        </div>
+        <span className="text-[10px] text-muted-foreground block">
+          Mínimo: {item.minStock} {item.unit}
+        </span>
+      </div>
+
+      <div className="flex items-center gap-4 shrink-0">
+        {/* stock display */}
+        <div className="text-right">
+          <span className={cn(
+            "font-extrabold text-sm block",
+            isLow ? "text-amber-600 dark:text-amber-400" : "text-foreground"
+          )}>
+            {item.currentStock}
+          </span>
+          <span className="text-[9px] text-muted-foreground block font-medium uppercase tracking-wider">{item.unit}</span>
+        </div>
+
+        {/* stock quick adjust increment/decrement */}
+        <div className="flex items-center border border-border rounded-lg bg-background overflow-hidden">
+          <button
+            onClick={() => onAdjust(item.id, item.currentStock, -1)}
+            disabled={item.currentStock <= 0}
+            className="px-2 py-1 bg-background hover:bg-muted font-bold text-xs disabled:opacity-40 text-muted-foreground"
+            style={{ minWidth: '28px', minHeight: '28px' }}
+          >
+            -
+          </button>
+          <button
+            onClick={() => onAdjust(item.id, item.currentStock, 1)}
+            className="px-2 py-1 bg-background hover:bg-muted font-bold text-xs text-muted-foreground border-l border-border"
+            style={{ minWidth: '28px', minHeight: '28px' }}
+          >
+            +
+          </button>
+        </div>
+
+        {/* item operations edit / delete */}
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => onEdit(item)}
+            className="p-1.5 hover:bg-muted rounded-md text-muted-foreground hover:text-foreground transition-colors"
+            title="Editar insumo"
+            style={{ minWidth: '32px', minHeight: '32px' }}
+          >
+            <Pencil className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={() => onDelete(item.id, item.name)}
+            className="p-1.5 hover:bg-rose-50 rounded-md text-muted-foreground hover:text-rose-600 transition-colors"
+            title="Eliminar insumo"
+            style={{ minWidth: '32px', minHeight: '32px' }}
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

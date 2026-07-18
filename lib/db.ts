@@ -19,6 +19,7 @@ declare global {
   var prismaGlobal: undefined | ReturnType<typeof prismaClientSingleton>;
   var mockDbGlobal: undefined | {
     properties: mock.Property[];
+    spaces: mock.PropertySpace[];
     bookings: mock.Booking[];
     inventory: mock.InventoryItem[];
     finances: mock.FinancialRecord[];
@@ -36,6 +37,7 @@ if (hasDbUrl && process.env.NODE_ENV !== 'production') {
 if (!globalThis.mockDbGlobal) {
   globalThis.mockDbGlobal = {
     properties: [...mock.INITIAL_PROPERTIES],
+    spaces: [...mock.INITIAL_SPACES],
     bookings: [...mock.INITIAL_BOOKINGS],
     inventory: [...mock.INITIAL_INVENTORY],
     finances: [...mock.INITIAL_FINANCES],
@@ -51,7 +53,7 @@ export const db = {
   isMock: !hasDbUrl,
   
   properties: {
-    findMany: async (args?: { include?: { bookings?: boolean; inventory?: boolean; finances?: boolean; tasks?: boolean } }) => {
+    findMany: async (args?: { include?: { bookings?: boolean; inventory?: boolean; finances?: boolean; tasks?: boolean; spaces?: boolean } }) => {
       await delay();
       if (hasDbUrl && prisma) {
         return prisma.property.findMany(args as any);
@@ -62,6 +64,7 @@ export const db = {
         inventory: args?.include?.inventory ? mockDb.inventory.filter(i => i.propertyId === p.id) : undefined,
         finances: args?.include?.finances ? mockDb.finances.filter(f => f.propertyId === p.id) : undefined,
         tasks: args?.include?.tasks ? mockDb.tasks.filter(t => t.propertyId === p.id) : undefined,
+        spaces: args?.include?.spaces ? mockDb.spaces.filter(s => s.propertyId === p.id) : undefined,
       }));
     },
     findUnique: async (args: { where: { id: string } }) => {
@@ -82,6 +85,91 @@ export const db = {
       };
       mockDb.properties.push(newProperty);
       return newProperty;
+    },
+    update: async (args: { where: { id: string }; data: Partial<mock.Property> }) => {
+      await delay();
+      if (hasDbUrl && prisma) {
+        return prisma.property.update(args as any);
+      }
+      const idx = mockDb.properties.findIndex(p => p.id === args.where.id);
+      if (idx === -1) throw new Error('Property not found');
+      mockDb.properties[idx] = {
+        ...mockDb.properties[idx],
+        ...args.data,
+      };
+      return mockDb.properties[idx];
+    },
+    delete: async (args: { where: { id: string } }) => {
+      await delay();
+      if (hasDbUrl && prisma) {
+        return prisma.property.delete(args as any);
+      }
+      const idx = mockDb.properties.findIndex(p => p.id === args.where.id);
+      if (idx === -1) throw new Error('Property not found');
+      const deleted = mockDb.properties[idx];
+      mockDb.properties.splice(idx, 1);
+      
+      // Cascade delete related mock elements
+      mockDb.bookings = mockDb.bookings.filter(b => b.propertyId !== args.where.id);
+      mockDb.inventory = mockDb.inventory.filter(i => i.propertyId !== args.where.id);
+      mockDb.finances = mockDb.finances.filter(f => f.propertyId !== args.where.id);
+      mockDb.tasks = mockDb.tasks.filter(t => t.propertyId !== args.where.id);
+      mockDb.spaces = mockDb.spaces.filter(s => s.propertyId !== args.where.id);
+      
+      return deleted;
+    }
+  },
+
+  spaces: {
+    findMany: async (args?: { where?: { propertyId?: string } }) => {
+      await delay();
+      if (hasDbUrl && prisma) {
+        return prisma.propertySpace.findMany(args as any);
+      }
+      let list = [...mockDb.spaces];
+      if (args?.where?.propertyId) {
+        list = list.filter(s => s.propertyId === args.where!.propertyId);
+      }
+      return list;
+    },
+    create: async (args: { data: { propertyId: string; name: string } }) => {
+      await delay();
+      if (hasDbUrl && prisma) {
+        return prisma.propertySpace.create(args as any);
+      }
+      const newSpace: mock.PropertySpace = {
+        id: `space-${Math.random().toString(36).substring(2, 9)}`,
+        ...args.data,
+      };
+      mockDb.spaces.push(newSpace);
+      return newSpace;
+    },
+    update: async (args: { where: { id: string }; data: { name: string } }) => {
+      await delay();
+      if (hasDbUrl && prisma) {
+        return prisma.propertySpace.update(args as any);
+      }
+      const idx = mockDb.spaces.findIndex(s => s.id === args.where.id);
+      if (idx === -1) throw new Error('Space not found');
+      mockDb.spaces[idx] = {
+        ...mockDb.spaces[idx],
+        name: args.data.name,
+      };
+      return mockDb.spaces[idx];
+    },
+    delete: async (args: { where: { id: string } }) => {
+      await delay();
+      if (hasDbUrl && prisma) {
+        return prisma.propertySpace.delete(args as any);
+      }
+      const idx = mockDb.spaces.findIndex(s => s.id === args.where.id);
+      if (idx === -1) throw new Error('Space not found');
+      const deleted = mockDb.spaces[idx];
+      mockDb.spaces.splice(idx, 1);
+      
+      // Cascade delete mock inventory items that belong to this space
+      mockDb.inventory = mockDb.inventory.filter(i => i.spaceId !== args.where.id);
+      return deleted;
     }
   },
 
@@ -150,7 +238,7 @@ export const db = {
   },
 
   inventory: {
-    findMany: async (args?: { where?: { propertyId?: string } }) => {
+    findMany: async (args?: { where?: { propertyId?: string }; include?: { space?: boolean } }) => {
       await delay();
       if (hasDbUrl && prisma) {
         return prisma.inventoryItem.findMany(args as any);
@@ -159,9 +247,12 @@ export const db = {
       if (args?.where?.propertyId) {
         list = list.filter(i => i.propertyId === args.where!.propertyId);
       }
-      return list;
+      return list.map(item => ({
+        ...item,
+        space: args?.include?.space && item.spaceId ? mockDb.spaces.find(s => s.id === item.spaceId) : undefined,
+      }));
     },
-    update: async (args: { where: { id: string }; data: { currentStock: number } }) => {
+    update: async (args: { where: { id: string }; data: Partial<mock.InventoryItem> }) => {
       await delay();
       if (hasDbUrl && prisma) {
         return prisma.inventoryItem.update(args as any);
@@ -170,9 +261,9 @@ export const db = {
       if (idx === -1) throw new Error('Inventory item not found');
       const updated = {
         ...mockDb.inventory[idx],
-        currentStock: args.data.currentStock,
+        ...args.data,
       };
-      mockDb.inventory[idx] = updated;
+      mockDb.inventory[idx] = updated as mock.InventoryItem;
       return updated;
     },
     create: async (args: { data: Omit<mock.InventoryItem, 'id'> }) => {
@@ -182,10 +273,28 @@ export const db = {
       }
       const newInventory: mock.InventoryItem = {
         id: `inv-${Math.random().toString(36).substring(2, 9)}`,
-        ...args.data,
+        spaceId: args.data.spaceId || null,
+        name: args.data.name,
+        currentStock: args.data.currentStock,
+        minStock: args.data.minStock,
+        unit: args.data.unit,
+        category: args.data.category || 'General',
+        subCategory: args.data.subCategory || null,
+        propertyId: args.data.propertyId,
       };
       mockDb.inventory.push(newInventory);
       return newInventory;
+    },
+    delete: async (args: { where: { id: string } }) => {
+      await delay();
+      if (hasDbUrl && prisma) {
+        return prisma.inventoryItem.delete(args as any);
+      }
+      const idx = mockDb.inventory.findIndex(i => i.id === args.where.id);
+      if (idx === -1) throw new Error('Inventory item not found');
+      const deleted = mockDb.inventory[idx];
+      mockDb.inventory.splice(idx, 1);
+      return deleted;
     }
   },
 

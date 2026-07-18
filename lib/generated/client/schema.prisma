@@ -16,6 +16,15 @@ model Property {
   inventory InventoryItem[]
   finances  FinancialRecord[]
   tasks     Task[]
+  spaces    PropertySpace[]
+}
+
+model PropertySpace {
+  id         String          @id @default(uuid())
+  propertyId String
+  property   Property        @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  name       String // Ej. "Habitación 1", "Cocina", "Comedor", "Living", "Baño"
+  inventory  InventoryItem[]
 }
 
 model Booking {
@@ -31,13 +40,17 @@ model Booking {
 }
 
 model InventoryItem {
-  id           String   @id @default(uuid())
+  id           String         @id @default(uuid())
   propertyId   String
-  property     Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  property     Property       @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  spaceId      String?
+  space        PropertySpace? @relation(fields: [spaceId], references: [id], onDelete: Cascade)
   name         String
   currentStock Int
   minStock     Int
   unit         String // Ej. "unidades", "cápsulas", "paquetes"
+  category     String         @default("General") // "General", "Reposición"
+  subCategory  String? // Usado en Cocina (vajilla, electrodomésticos, etc.)
 }
 
 model FinancialRecord {

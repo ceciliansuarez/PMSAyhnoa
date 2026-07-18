@@ -19,6 +19,11 @@ export type PrismaPromise<T> = $Public.PrismaPromise<T>
  */
 export type Property = $Result.DefaultSelection<Prisma.$PropertyPayload>
 /**
+ * Model PropertySpace
+ * 
+ */
+export type PropertySpace = $Result.DefaultSelection<Prisma.$PropertySpacePayload>
+/**
  * Model Booking
  * 
  */
@@ -169,6 +174,16 @@ export class PrismaClient<
     * ```
     */
   get property(): Prisma.PropertyDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.propertySpace`: Exposes CRUD operations for the **PropertySpace** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more PropertySpaces
+    * const propertySpaces = await prisma.propertySpace.findMany()
+    * ```
+    */
+  get propertySpace(): Prisma.PropertySpaceDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.booking`: Exposes CRUD operations for the **Booking** model.
@@ -644,6 +659,7 @@ export namespace Prisma {
 
   export const ModelName: {
     Property: 'Property',
+    PropertySpace: 'PropertySpace',
     Booking: 'Booking',
     InventoryItem: 'InventoryItem',
     FinancialRecord: 'FinancialRecord',
@@ -663,7 +679,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "property" | "booking" | "inventoryItem" | "financialRecord" | "task"
+      modelProps: "property" | "propertySpace" | "booking" | "inventoryItem" | "financialRecord" | "task"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -738,6 +754,80 @@ export namespace Prisma {
           count: {
             args: Prisma.PropertyCountArgs<ExtArgs>
             result: $Utils.Optional<PropertyCountAggregateOutputType> | number
+          }
+        }
+      }
+      PropertySpace: {
+        payload: Prisma.$PropertySpacePayload<ExtArgs>
+        fields: Prisma.PropertySpaceFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.PropertySpaceFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PropertySpacePayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.PropertySpaceFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PropertySpacePayload>
+          }
+          findFirst: {
+            args: Prisma.PropertySpaceFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PropertySpacePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.PropertySpaceFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PropertySpacePayload>
+          }
+          findMany: {
+            args: Prisma.PropertySpaceFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PropertySpacePayload>[]
+          }
+          create: {
+            args: Prisma.PropertySpaceCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PropertySpacePayload>
+          }
+          createMany: {
+            args: Prisma.PropertySpaceCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.PropertySpaceCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PropertySpacePayload>[]
+          }
+          delete: {
+            args: Prisma.PropertySpaceDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PropertySpacePayload>
+          }
+          update: {
+            args: Prisma.PropertySpaceUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PropertySpacePayload>
+          }
+          deleteMany: {
+            args: Prisma.PropertySpaceDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.PropertySpaceUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.PropertySpaceUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PropertySpacePayload>[]
+          }
+          upsert: {
+            args: Prisma.PropertySpaceUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PropertySpacePayload>
+          }
+          aggregate: {
+            args: Prisma.PropertySpaceAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregatePropertySpace>
+          }
+          groupBy: {
+            args: Prisma.PropertySpaceGroupByArgs<ExtArgs>
+            result: $Utils.Optional<PropertySpaceGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.PropertySpaceCountArgs<ExtArgs>
+            result: $Utils.Optional<PropertySpaceCountAggregateOutputType> | number
           }
         }
       }
@@ -1146,6 +1236,7 @@ export namespace Prisma {
   }
   export type GlobalOmitConfig = {
     property?: PropertyOmit
+    propertySpace?: PropertySpaceOmit
     booking?: BookingOmit
     inventoryItem?: InventoryItemOmit
     financialRecord?: FinancialRecordOmit
@@ -1234,6 +1325,7 @@ export namespace Prisma {
     inventory: number
     finances: number
     tasks: number
+    spaces: number
   }
 
   export type PropertyCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -1241,6 +1333,7 @@ export namespace Prisma {
     inventory?: boolean | PropertyCountOutputTypeCountInventoryArgs
     finances?: boolean | PropertyCountOutputTypeCountFinancesArgs
     tasks?: boolean | PropertyCountOutputTypeCountTasksArgs
+    spaces?: boolean | PropertyCountOutputTypeCountSpacesArgs
   }
 
   // Custom InputTypes
@@ -1280,6 +1373,44 @@ export namespace Prisma {
    */
   export type PropertyCountOutputTypeCountTasksArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: TaskWhereInput
+  }
+
+  /**
+   * PropertyCountOutputType without action
+   */
+  export type PropertyCountOutputTypeCountSpacesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: PropertySpaceWhereInput
+  }
+
+
+  /**
+   * Count Type PropertySpaceCountOutputType
+   */
+
+  export type PropertySpaceCountOutputType = {
+    inventory: number
+  }
+
+  export type PropertySpaceCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    inventory?: boolean | PropertySpaceCountOutputTypeCountInventoryArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * PropertySpaceCountOutputType without action
+   */
+  export type PropertySpaceCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PropertySpaceCountOutputType
+     */
+    select?: PropertySpaceCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * PropertySpaceCountOutputType without action
+   */
+  export type PropertySpaceCountOutputTypeCountInventoryArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: InventoryItemWhereInput
   }
 
 
@@ -1447,6 +1578,7 @@ export namespace Prisma {
     inventory?: boolean | Property$inventoryArgs<ExtArgs>
     finances?: boolean | Property$financesArgs<ExtArgs>
     tasks?: boolean | Property$tasksArgs<ExtArgs>
+    spaces?: boolean | Property$spacesArgs<ExtArgs>
     _count?: boolean | PropertyCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["property"]>
 
@@ -1477,6 +1609,7 @@ export namespace Prisma {
     inventory?: boolean | Property$inventoryArgs<ExtArgs>
     finances?: boolean | Property$financesArgs<ExtArgs>
     tasks?: boolean | Property$tasksArgs<ExtArgs>
+    spaces?: boolean | Property$spacesArgs<ExtArgs>
     _count?: boolean | PropertyCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type PropertyIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -1489,6 +1622,7 @@ export namespace Prisma {
       inventory: Prisma.$InventoryItemPayload<ExtArgs>[]
       finances: Prisma.$FinancialRecordPayload<ExtArgs>[]
       tasks: Prisma.$TaskPayload<ExtArgs>[]
+      spaces: Prisma.$PropertySpacePayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -1893,6 +2027,7 @@ export namespace Prisma {
     inventory<T extends Property$inventoryArgs<ExtArgs> = {}>(args?: Subset<T, Property$inventoryArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$InventoryItemPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     finances<T extends Property$financesArgs<ExtArgs> = {}>(args?: Subset<T, Property$financesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$FinancialRecordPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     tasks<T extends Property$tasksArgs<ExtArgs> = {}>(args?: Subset<T, Property$tasksArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TaskPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    spaces<T extends Property$spacesArgs<ExtArgs> = {}>(args?: Subset<T, Property$spacesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PropertySpacePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2415,6 +2550,30 @@ export namespace Prisma {
   }
 
   /**
+   * Property.spaces
+   */
+  export type Property$spacesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PropertySpace
+     */
+    select?: PropertySpaceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PropertySpace
+     */
+    omit?: PropertySpaceOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PropertySpaceInclude<ExtArgs> | null
+    where?: PropertySpaceWhereInput
+    orderBy?: PropertySpaceOrderByWithRelationInput | PropertySpaceOrderByWithRelationInput[]
+    cursor?: PropertySpaceWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: PropertySpaceScalarFieldEnum | PropertySpaceScalarFieldEnum[]
+  }
+
+  /**
    * Property without action
    */
   export type PropertyDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -2430,6 +2589,1073 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: PropertyInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model PropertySpace
+   */
+
+  export type AggregatePropertySpace = {
+    _count: PropertySpaceCountAggregateOutputType | null
+    _min: PropertySpaceMinAggregateOutputType | null
+    _max: PropertySpaceMaxAggregateOutputType | null
+  }
+
+  export type PropertySpaceMinAggregateOutputType = {
+    id: string | null
+    propertyId: string | null
+    name: string | null
+  }
+
+  export type PropertySpaceMaxAggregateOutputType = {
+    id: string | null
+    propertyId: string | null
+    name: string | null
+  }
+
+  export type PropertySpaceCountAggregateOutputType = {
+    id: number
+    propertyId: number
+    name: number
+    _all: number
+  }
+
+
+  export type PropertySpaceMinAggregateInputType = {
+    id?: true
+    propertyId?: true
+    name?: true
+  }
+
+  export type PropertySpaceMaxAggregateInputType = {
+    id?: true
+    propertyId?: true
+    name?: true
+  }
+
+  export type PropertySpaceCountAggregateInputType = {
+    id?: true
+    propertyId?: true
+    name?: true
+    _all?: true
+  }
+
+  export type PropertySpaceAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which PropertySpace to aggregate.
+     */
+    where?: PropertySpaceWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PropertySpaces to fetch.
+     */
+    orderBy?: PropertySpaceOrderByWithRelationInput | PropertySpaceOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: PropertySpaceWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PropertySpaces from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PropertySpaces.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned PropertySpaces
+    **/
+    _count?: true | PropertySpaceCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: PropertySpaceMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: PropertySpaceMaxAggregateInputType
+  }
+
+  export type GetPropertySpaceAggregateType<T extends PropertySpaceAggregateArgs> = {
+        [P in keyof T & keyof AggregatePropertySpace]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregatePropertySpace[P]>
+      : GetScalarType<T[P], AggregatePropertySpace[P]>
+  }
+
+
+
+
+  export type PropertySpaceGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: PropertySpaceWhereInput
+    orderBy?: PropertySpaceOrderByWithAggregationInput | PropertySpaceOrderByWithAggregationInput[]
+    by: PropertySpaceScalarFieldEnum[] | PropertySpaceScalarFieldEnum
+    having?: PropertySpaceScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: PropertySpaceCountAggregateInputType | true
+    _min?: PropertySpaceMinAggregateInputType
+    _max?: PropertySpaceMaxAggregateInputType
+  }
+
+  export type PropertySpaceGroupByOutputType = {
+    id: string
+    propertyId: string
+    name: string
+    _count: PropertySpaceCountAggregateOutputType | null
+    _min: PropertySpaceMinAggregateOutputType | null
+    _max: PropertySpaceMaxAggregateOutputType | null
+  }
+
+  type GetPropertySpaceGroupByPayload<T extends PropertySpaceGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<PropertySpaceGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof PropertySpaceGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], PropertySpaceGroupByOutputType[P]>
+            : GetScalarType<T[P], PropertySpaceGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type PropertySpaceSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    propertyId?: boolean
+    name?: boolean
+    property?: boolean | PropertyDefaultArgs<ExtArgs>
+    inventory?: boolean | PropertySpace$inventoryArgs<ExtArgs>
+    _count?: boolean | PropertySpaceCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["propertySpace"]>
+
+  export type PropertySpaceSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    propertyId?: boolean
+    name?: boolean
+    property?: boolean | PropertyDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["propertySpace"]>
+
+  export type PropertySpaceSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    propertyId?: boolean
+    name?: boolean
+    property?: boolean | PropertyDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["propertySpace"]>
+
+  export type PropertySpaceSelectScalar = {
+    id?: boolean
+    propertyId?: boolean
+    name?: boolean
+  }
+
+  export type PropertySpaceOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "propertyId" | "name", ExtArgs["result"]["propertySpace"]>
+  export type PropertySpaceInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    property?: boolean | PropertyDefaultArgs<ExtArgs>
+    inventory?: boolean | PropertySpace$inventoryArgs<ExtArgs>
+    _count?: boolean | PropertySpaceCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type PropertySpaceIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    property?: boolean | PropertyDefaultArgs<ExtArgs>
+  }
+  export type PropertySpaceIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    property?: boolean | PropertyDefaultArgs<ExtArgs>
+  }
+
+  export type $PropertySpacePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "PropertySpace"
+    objects: {
+      property: Prisma.$PropertyPayload<ExtArgs>
+      inventory: Prisma.$InventoryItemPayload<ExtArgs>[]
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      propertyId: string
+      name: string
+    }, ExtArgs["result"]["propertySpace"]>
+    composites: {}
+  }
+
+  type PropertySpaceGetPayload<S extends boolean | null | undefined | PropertySpaceDefaultArgs> = $Result.GetResult<Prisma.$PropertySpacePayload, S>
+
+  type PropertySpaceCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<PropertySpaceFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: PropertySpaceCountAggregateInputType | true
+    }
+
+  export interface PropertySpaceDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['PropertySpace'], meta: { name: 'PropertySpace' } }
+    /**
+     * Find zero or one PropertySpace that matches the filter.
+     * @param {PropertySpaceFindUniqueArgs} args - Arguments to find a PropertySpace
+     * @example
+     * // Get one PropertySpace
+     * const propertySpace = await prisma.propertySpace.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends PropertySpaceFindUniqueArgs>(args: SelectSubset<T, PropertySpaceFindUniqueArgs<ExtArgs>>): Prisma__PropertySpaceClient<$Result.GetResult<Prisma.$PropertySpacePayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one PropertySpace that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {PropertySpaceFindUniqueOrThrowArgs} args - Arguments to find a PropertySpace
+     * @example
+     * // Get one PropertySpace
+     * const propertySpace = await prisma.propertySpace.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends PropertySpaceFindUniqueOrThrowArgs>(args: SelectSubset<T, PropertySpaceFindUniqueOrThrowArgs<ExtArgs>>): Prisma__PropertySpaceClient<$Result.GetResult<Prisma.$PropertySpacePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first PropertySpace that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PropertySpaceFindFirstArgs} args - Arguments to find a PropertySpace
+     * @example
+     * // Get one PropertySpace
+     * const propertySpace = await prisma.propertySpace.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends PropertySpaceFindFirstArgs>(args?: SelectSubset<T, PropertySpaceFindFirstArgs<ExtArgs>>): Prisma__PropertySpaceClient<$Result.GetResult<Prisma.$PropertySpacePayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first PropertySpace that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PropertySpaceFindFirstOrThrowArgs} args - Arguments to find a PropertySpace
+     * @example
+     * // Get one PropertySpace
+     * const propertySpace = await prisma.propertySpace.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends PropertySpaceFindFirstOrThrowArgs>(args?: SelectSubset<T, PropertySpaceFindFirstOrThrowArgs<ExtArgs>>): Prisma__PropertySpaceClient<$Result.GetResult<Prisma.$PropertySpacePayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more PropertySpaces that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PropertySpaceFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all PropertySpaces
+     * const propertySpaces = await prisma.propertySpace.findMany()
+     * 
+     * // Get first 10 PropertySpaces
+     * const propertySpaces = await prisma.propertySpace.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const propertySpaceWithIdOnly = await prisma.propertySpace.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends PropertySpaceFindManyArgs>(args?: SelectSubset<T, PropertySpaceFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PropertySpacePayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a PropertySpace.
+     * @param {PropertySpaceCreateArgs} args - Arguments to create a PropertySpace.
+     * @example
+     * // Create one PropertySpace
+     * const PropertySpace = await prisma.propertySpace.create({
+     *   data: {
+     *     // ... data to create a PropertySpace
+     *   }
+     * })
+     * 
+     */
+    create<T extends PropertySpaceCreateArgs>(args: SelectSubset<T, PropertySpaceCreateArgs<ExtArgs>>): Prisma__PropertySpaceClient<$Result.GetResult<Prisma.$PropertySpacePayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many PropertySpaces.
+     * @param {PropertySpaceCreateManyArgs} args - Arguments to create many PropertySpaces.
+     * @example
+     * // Create many PropertySpaces
+     * const propertySpace = await prisma.propertySpace.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends PropertySpaceCreateManyArgs>(args?: SelectSubset<T, PropertySpaceCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many PropertySpaces and returns the data saved in the database.
+     * @param {PropertySpaceCreateManyAndReturnArgs} args - Arguments to create many PropertySpaces.
+     * @example
+     * // Create many PropertySpaces
+     * const propertySpace = await prisma.propertySpace.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many PropertySpaces and only return the `id`
+     * const propertySpaceWithIdOnly = await prisma.propertySpace.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends PropertySpaceCreateManyAndReturnArgs>(args?: SelectSubset<T, PropertySpaceCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PropertySpacePayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a PropertySpace.
+     * @param {PropertySpaceDeleteArgs} args - Arguments to delete one PropertySpace.
+     * @example
+     * // Delete one PropertySpace
+     * const PropertySpace = await prisma.propertySpace.delete({
+     *   where: {
+     *     // ... filter to delete one PropertySpace
+     *   }
+     * })
+     * 
+     */
+    delete<T extends PropertySpaceDeleteArgs>(args: SelectSubset<T, PropertySpaceDeleteArgs<ExtArgs>>): Prisma__PropertySpaceClient<$Result.GetResult<Prisma.$PropertySpacePayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one PropertySpace.
+     * @param {PropertySpaceUpdateArgs} args - Arguments to update one PropertySpace.
+     * @example
+     * // Update one PropertySpace
+     * const propertySpace = await prisma.propertySpace.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends PropertySpaceUpdateArgs>(args: SelectSubset<T, PropertySpaceUpdateArgs<ExtArgs>>): Prisma__PropertySpaceClient<$Result.GetResult<Prisma.$PropertySpacePayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more PropertySpaces.
+     * @param {PropertySpaceDeleteManyArgs} args - Arguments to filter PropertySpaces to delete.
+     * @example
+     * // Delete a few PropertySpaces
+     * const { count } = await prisma.propertySpace.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends PropertySpaceDeleteManyArgs>(args?: SelectSubset<T, PropertySpaceDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more PropertySpaces.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PropertySpaceUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many PropertySpaces
+     * const propertySpace = await prisma.propertySpace.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends PropertySpaceUpdateManyArgs>(args: SelectSubset<T, PropertySpaceUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more PropertySpaces and returns the data updated in the database.
+     * @param {PropertySpaceUpdateManyAndReturnArgs} args - Arguments to update many PropertySpaces.
+     * @example
+     * // Update many PropertySpaces
+     * const propertySpace = await prisma.propertySpace.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more PropertySpaces and only return the `id`
+     * const propertySpaceWithIdOnly = await prisma.propertySpace.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends PropertySpaceUpdateManyAndReturnArgs>(args: SelectSubset<T, PropertySpaceUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PropertySpacePayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one PropertySpace.
+     * @param {PropertySpaceUpsertArgs} args - Arguments to update or create a PropertySpace.
+     * @example
+     * // Update or create a PropertySpace
+     * const propertySpace = await prisma.propertySpace.upsert({
+     *   create: {
+     *     // ... data to create a PropertySpace
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the PropertySpace we want to update
+     *   }
+     * })
+     */
+    upsert<T extends PropertySpaceUpsertArgs>(args: SelectSubset<T, PropertySpaceUpsertArgs<ExtArgs>>): Prisma__PropertySpaceClient<$Result.GetResult<Prisma.$PropertySpacePayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of PropertySpaces.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PropertySpaceCountArgs} args - Arguments to filter PropertySpaces to count.
+     * @example
+     * // Count the number of PropertySpaces
+     * const count = await prisma.propertySpace.count({
+     *   where: {
+     *     // ... the filter for the PropertySpaces we want to count
+     *   }
+     * })
+    **/
+    count<T extends PropertySpaceCountArgs>(
+      args?: Subset<T, PropertySpaceCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], PropertySpaceCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a PropertySpace.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PropertySpaceAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends PropertySpaceAggregateArgs>(args: Subset<T, PropertySpaceAggregateArgs>): Prisma.PrismaPromise<GetPropertySpaceAggregateType<T>>
+
+    /**
+     * Group by PropertySpace.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PropertySpaceGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends PropertySpaceGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: PropertySpaceGroupByArgs['orderBy'] }
+        : { orderBy?: PropertySpaceGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, PropertySpaceGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetPropertySpaceGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the PropertySpace model
+   */
+  readonly fields: PropertySpaceFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for PropertySpace.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__PropertySpaceClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    property<T extends PropertyDefaultArgs<ExtArgs> = {}>(args?: Subset<T, PropertyDefaultArgs<ExtArgs>>): Prisma__PropertyClient<$Result.GetResult<Prisma.$PropertyPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    inventory<T extends PropertySpace$inventoryArgs<ExtArgs> = {}>(args?: Subset<T, PropertySpace$inventoryArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$InventoryItemPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the PropertySpace model
+   */
+  interface PropertySpaceFieldRefs {
+    readonly id: FieldRef<"PropertySpace", 'String'>
+    readonly propertyId: FieldRef<"PropertySpace", 'String'>
+    readonly name: FieldRef<"PropertySpace", 'String'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * PropertySpace findUnique
+   */
+  export type PropertySpaceFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PropertySpace
+     */
+    select?: PropertySpaceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PropertySpace
+     */
+    omit?: PropertySpaceOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PropertySpaceInclude<ExtArgs> | null
+    /**
+     * Filter, which PropertySpace to fetch.
+     */
+    where: PropertySpaceWhereUniqueInput
+  }
+
+  /**
+   * PropertySpace findUniqueOrThrow
+   */
+  export type PropertySpaceFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PropertySpace
+     */
+    select?: PropertySpaceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PropertySpace
+     */
+    omit?: PropertySpaceOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PropertySpaceInclude<ExtArgs> | null
+    /**
+     * Filter, which PropertySpace to fetch.
+     */
+    where: PropertySpaceWhereUniqueInput
+  }
+
+  /**
+   * PropertySpace findFirst
+   */
+  export type PropertySpaceFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PropertySpace
+     */
+    select?: PropertySpaceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PropertySpace
+     */
+    omit?: PropertySpaceOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PropertySpaceInclude<ExtArgs> | null
+    /**
+     * Filter, which PropertySpace to fetch.
+     */
+    where?: PropertySpaceWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PropertySpaces to fetch.
+     */
+    orderBy?: PropertySpaceOrderByWithRelationInput | PropertySpaceOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for PropertySpaces.
+     */
+    cursor?: PropertySpaceWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PropertySpaces from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PropertySpaces.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of PropertySpaces.
+     */
+    distinct?: PropertySpaceScalarFieldEnum | PropertySpaceScalarFieldEnum[]
+  }
+
+  /**
+   * PropertySpace findFirstOrThrow
+   */
+  export type PropertySpaceFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PropertySpace
+     */
+    select?: PropertySpaceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PropertySpace
+     */
+    omit?: PropertySpaceOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PropertySpaceInclude<ExtArgs> | null
+    /**
+     * Filter, which PropertySpace to fetch.
+     */
+    where?: PropertySpaceWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PropertySpaces to fetch.
+     */
+    orderBy?: PropertySpaceOrderByWithRelationInput | PropertySpaceOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for PropertySpaces.
+     */
+    cursor?: PropertySpaceWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PropertySpaces from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PropertySpaces.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of PropertySpaces.
+     */
+    distinct?: PropertySpaceScalarFieldEnum | PropertySpaceScalarFieldEnum[]
+  }
+
+  /**
+   * PropertySpace findMany
+   */
+  export type PropertySpaceFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PropertySpace
+     */
+    select?: PropertySpaceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PropertySpace
+     */
+    omit?: PropertySpaceOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PropertySpaceInclude<ExtArgs> | null
+    /**
+     * Filter, which PropertySpaces to fetch.
+     */
+    where?: PropertySpaceWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PropertySpaces to fetch.
+     */
+    orderBy?: PropertySpaceOrderByWithRelationInput | PropertySpaceOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing PropertySpaces.
+     */
+    cursor?: PropertySpaceWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PropertySpaces from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PropertySpaces.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of PropertySpaces.
+     */
+    distinct?: PropertySpaceScalarFieldEnum | PropertySpaceScalarFieldEnum[]
+  }
+
+  /**
+   * PropertySpace create
+   */
+  export type PropertySpaceCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PropertySpace
+     */
+    select?: PropertySpaceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PropertySpace
+     */
+    omit?: PropertySpaceOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PropertySpaceInclude<ExtArgs> | null
+    /**
+     * The data needed to create a PropertySpace.
+     */
+    data: XOR<PropertySpaceCreateInput, PropertySpaceUncheckedCreateInput>
+  }
+
+  /**
+   * PropertySpace createMany
+   */
+  export type PropertySpaceCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many PropertySpaces.
+     */
+    data: PropertySpaceCreateManyInput | PropertySpaceCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * PropertySpace createManyAndReturn
+   */
+  export type PropertySpaceCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PropertySpace
+     */
+    select?: PropertySpaceSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the PropertySpace
+     */
+    omit?: PropertySpaceOmit<ExtArgs> | null
+    /**
+     * The data used to create many PropertySpaces.
+     */
+    data: PropertySpaceCreateManyInput | PropertySpaceCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PropertySpaceIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * PropertySpace update
+   */
+  export type PropertySpaceUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PropertySpace
+     */
+    select?: PropertySpaceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PropertySpace
+     */
+    omit?: PropertySpaceOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PropertySpaceInclude<ExtArgs> | null
+    /**
+     * The data needed to update a PropertySpace.
+     */
+    data: XOR<PropertySpaceUpdateInput, PropertySpaceUncheckedUpdateInput>
+    /**
+     * Choose, which PropertySpace to update.
+     */
+    where: PropertySpaceWhereUniqueInput
+  }
+
+  /**
+   * PropertySpace updateMany
+   */
+  export type PropertySpaceUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update PropertySpaces.
+     */
+    data: XOR<PropertySpaceUpdateManyMutationInput, PropertySpaceUncheckedUpdateManyInput>
+    /**
+     * Filter which PropertySpaces to update
+     */
+    where?: PropertySpaceWhereInput
+    /**
+     * Limit how many PropertySpaces to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * PropertySpace updateManyAndReturn
+   */
+  export type PropertySpaceUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PropertySpace
+     */
+    select?: PropertySpaceSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the PropertySpace
+     */
+    omit?: PropertySpaceOmit<ExtArgs> | null
+    /**
+     * The data used to update PropertySpaces.
+     */
+    data: XOR<PropertySpaceUpdateManyMutationInput, PropertySpaceUncheckedUpdateManyInput>
+    /**
+     * Filter which PropertySpaces to update
+     */
+    where?: PropertySpaceWhereInput
+    /**
+     * Limit how many PropertySpaces to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PropertySpaceIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * PropertySpace upsert
+   */
+  export type PropertySpaceUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PropertySpace
+     */
+    select?: PropertySpaceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PropertySpace
+     */
+    omit?: PropertySpaceOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PropertySpaceInclude<ExtArgs> | null
+    /**
+     * The filter to search for the PropertySpace to update in case it exists.
+     */
+    where: PropertySpaceWhereUniqueInput
+    /**
+     * In case the PropertySpace found by the `where` argument doesn't exist, create a new PropertySpace with this data.
+     */
+    create: XOR<PropertySpaceCreateInput, PropertySpaceUncheckedCreateInput>
+    /**
+     * In case the PropertySpace was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<PropertySpaceUpdateInput, PropertySpaceUncheckedUpdateInput>
+  }
+
+  /**
+   * PropertySpace delete
+   */
+  export type PropertySpaceDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PropertySpace
+     */
+    select?: PropertySpaceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PropertySpace
+     */
+    omit?: PropertySpaceOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PropertySpaceInclude<ExtArgs> | null
+    /**
+     * Filter which PropertySpace to delete.
+     */
+    where: PropertySpaceWhereUniqueInput
+  }
+
+  /**
+   * PropertySpace deleteMany
+   */
+  export type PropertySpaceDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which PropertySpaces to delete
+     */
+    where?: PropertySpaceWhereInput
+    /**
+     * Limit how many PropertySpaces to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * PropertySpace.inventory
+   */
+  export type PropertySpace$inventoryArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the InventoryItem
+     */
+    select?: InventoryItemSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the InventoryItem
+     */
+    omit?: InventoryItemOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InventoryItemInclude<ExtArgs> | null
+    where?: InventoryItemWhereInput
+    orderBy?: InventoryItemOrderByWithRelationInput | InventoryItemOrderByWithRelationInput[]
+    cursor?: InventoryItemWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: InventoryItemScalarFieldEnum | InventoryItemScalarFieldEnum[]
+  }
+
+  /**
+   * PropertySpace without action
+   */
+  export type PropertySpaceDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PropertySpace
+     */
+    select?: PropertySpaceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PropertySpace
+     */
+    omit?: PropertySpaceOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PropertySpaceInclude<ExtArgs> | null
   }
 
 
@@ -3594,28 +4820,37 @@ export namespace Prisma {
   export type InventoryItemMinAggregateOutputType = {
     id: string | null
     propertyId: string | null
+    spaceId: string | null
     name: string | null
     currentStock: number | null
     minStock: number | null
     unit: string | null
+    category: string | null
+    subCategory: string | null
   }
 
   export type InventoryItemMaxAggregateOutputType = {
     id: string | null
     propertyId: string | null
+    spaceId: string | null
     name: string | null
     currentStock: number | null
     minStock: number | null
     unit: string | null
+    category: string | null
+    subCategory: string | null
   }
 
   export type InventoryItemCountAggregateOutputType = {
     id: number
     propertyId: number
+    spaceId: number
     name: number
     currentStock: number
     minStock: number
     unit: number
+    category: number
+    subCategory: number
     _all: number
   }
 
@@ -3633,28 +4868,37 @@ export namespace Prisma {
   export type InventoryItemMinAggregateInputType = {
     id?: true
     propertyId?: true
+    spaceId?: true
     name?: true
     currentStock?: true
     minStock?: true
     unit?: true
+    category?: true
+    subCategory?: true
   }
 
   export type InventoryItemMaxAggregateInputType = {
     id?: true
     propertyId?: true
+    spaceId?: true
     name?: true
     currentStock?: true
     minStock?: true
     unit?: true
+    category?: true
+    subCategory?: true
   }
 
   export type InventoryItemCountAggregateInputType = {
     id?: true
     propertyId?: true
+    spaceId?: true
     name?: true
     currentStock?: true
     minStock?: true
     unit?: true
+    category?: true
+    subCategory?: true
     _all?: true
   }
 
@@ -3747,10 +4991,13 @@ export namespace Prisma {
   export type InventoryItemGroupByOutputType = {
     id: string
     propertyId: string
+    spaceId: string | null
     name: string
     currentStock: number
     minStock: number
     unit: string
+    category: string
+    subCategory: string | null
     _count: InventoryItemCountAggregateOutputType | null
     _avg: InventoryItemAvgAggregateOutputType | null
     _sum: InventoryItemSumAggregateOutputType | null
@@ -3775,65 +5022,87 @@ export namespace Prisma {
   export type InventoryItemSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     propertyId?: boolean
+    spaceId?: boolean
     name?: boolean
     currentStock?: boolean
     minStock?: boolean
     unit?: boolean
+    category?: boolean
+    subCategory?: boolean
     property?: boolean | PropertyDefaultArgs<ExtArgs>
+    space?: boolean | InventoryItem$spaceArgs<ExtArgs>
   }, ExtArgs["result"]["inventoryItem"]>
 
   export type InventoryItemSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     propertyId?: boolean
+    spaceId?: boolean
     name?: boolean
     currentStock?: boolean
     minStock?: boolean
     unit?: boolean
+    category?: boolean
+    subCategory?: boolean
     property?: boolean | PropertyDefaultArgs<ExtArgs>
+    space?: boolean | InventoryItem$spaceArgs<ExtArgs>
   }, ExtArgs["result"]["inventoryItem"]>
 
   export type InventoryItemSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     propertyId?: boolean
+    spaceId?: boolean
     name?: boolean
     currentStock?: boolean
     minStock?: boolean
     unit?: boolean
+    category?: boolean
+    subCategory?: boolean
     property?: boolean | PropertyDefaultArgs<ExtArgs>
+    space?: boolean | InventoryItem$spaceArgs<ExtArgs>
   }, ExtArgs["result"]["inventoryItem"]>
 
   export type InventoryItemSelectScalar = {
     id?: boolean
     propertyId?: boolean
+    spaceId?: boolean
     name?: boolean
     currentStock?: boolean
     minStock?: boolean
     unit?: boolean
+    category?: boolean
+    subCategory?: boolean
   }
 
-  export type InventoryItemOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "propertyId" | "name" | "currentStock" | "minStock" | "unit", ExtArgs["result"]["inventoryItem"]>
+  export type InventoryItemOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "propertyId" | "spaceId" | "name" | "currentStock" | "minStock" | "unit" | "category" | "subCategory", ExtArgs["result"]["inventoryItem"]>
   export type InventoryItemInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     property?: boolean | PropertyDefaultArgs<ExtArgs>
+    space?: boolean | InventoryItem$spaceArgs<ExtArgs>
   }
   export type InventoryItemIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     property?: boolean | PropertyDefaultArgs<ExtArgs>
+    space?: boolean | InventoryItem$spaceArgs<ExtArgs>
   }
   export type InventoryItemIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     property?: boolean | PropertyDefaultArgs<ExtArgs>
+    space?: boolean | InventoryItem$spaceArgs<ExtArgs>
   }
 
   export type $InventoryItemPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "InventoryItem"
     objects: {
       property: Prisma.$PropertyPayload<ExtArgs>
+      space: Prisma.$PropertySpacePayload<ExtArgs> | null
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
       propertyId: string
+      spaceId: string | null
       name: string
       currentStock: number
       minStock: number
       unit: string
+      category: string
+      subCategory: string | null
     }, ExtArgs["result"]["inventoryItem"]>
     composites: {}
   }
@@ -4229,6 +5498,7 @@ export namespace Prisma {
   export interface Prisma__InventoryItemClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     property<T extends PropertyDefaultArgs<ExtArgs> = {}>(args?: Subset<T, PropertyDefaultArgs<ExtArgs>>): Prisma__PropertyClient<$Result.GetResult<Prisma.$PropertyPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    space<T extends InventoryItem$spaceArgs<ExtArgs> = {}>(args?: Subset<T, InventoryItem$spaceArgs<ExtArgs>>): Prisma__PropertySpaceClient<$Result.GetResult<Prisma.$PropertySpacePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -4260,10 +5530,13 @@ export namespace Prisma {
   interface InventoryItemFieldRefs {
     readonly id: FieldRef<"InventoryItem", 'String'>
     readonly propertyId: FieldRef<"InventoryItem", 'String'>
+    readonly spaceId: FieldRef<"InventoryItem", 'String'>
     readonly name: FieldRef<"InventoryItem", 'String'>
     readonly currentStock: FieldRef<"InventoryItem", 'Int'>
     readonly minStock: FieldRef<"InventoryItem", 'Int'>
     readonly unit: FieldRef<"InventoryItem", 'String'>
+    readonly category: FieldRef<"InventoryItem", 'String'>
+    readonly subCategory: FieldRef<"InventoryItem", 'String'>
   }
     
 
@@ -4662,6 +5935,25 @@ export namespace Prisma {
      * Limit how many InventoryItems to delete.
      */
     limit?: number
+  }
+
+  /**
+   * InventoryItem.space
+   */
+  export type InventoryItem$spaceArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PropertySpace
+     */
+    select?: PropertySpaceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PropertySpace
+     */
+    omit?: PropertySpaceOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PropertySpaceInclude<ExtArgs> | null
+    where?: PropertySpaceWhereInput
   }
 
   /**
@@ -6919,6 +8211,15 @@ export namespace Prisma {
   export type PropertyScalarFieldEnum = (typeof PropertyScalarFieldEnum)[keyof typeof PropertyScalarFieldEnum]
 
 
+  export const PropertySpaceScalarFieldEnum: {
+    id: 'id',
+    propertyId: 'propertyId',
+    name: 'name'
+  };
+
+  export type PropertySpaceScalarFieldEnum = (typeof PropertySpaceScalarFieldEnum)[keyof typeof PropertySpaceScalarFieldEnum]
+
+
   export const BookingScalarFieldEnum: {
     id: 'id',
     propertyId: 'propertyId',
@@ -6936,10 +8237,13 @@ export namespace Prisma {
   export const InventoryItemScalarFieldEnum: {
     id: 'id',
     propertyId: 'propertyId',
+    spaceId: 'spaceId',
     name: 'name',
     currentStock: 'currentStock',
     minStock: 'minStock',
-    unit: 'unit'
+    unit: 'unit',
+    category: 'category',
+    subCategory: 'subCategory'
   };
 
   export type InventoryItemScalarFieldEnum = (typeof InventoryItemScalarFieldEnum)[keyof typeof InventoryItemScalarFieldEnum]
@@ -7071,6 +8375,7 @@ export namespace Prisma {
     inventory?: InventoryItemListRelationFilter
     finances?: FinancialRecordListRelationFilter
     tasks?: TaskListRelationFilter
+    spaces?: PropertySpaceListRelationFilter
   }
 
   export type PropertyOrderByWithRelationInput = {
@@ -7082,6 +8387,7 @@ export namespace Prisma {
     inventory?: InventoryItemOrderByRelationAggregateInput
     finances?: FinancialRecordOrderByRelationAggregateInput
     tasks?: TaskOrderByRelationAggregateInput
+    spaces?: PropertySpaceOrderByRelationAggregateInput
   }
 
   export type PropertyWhereUniqueInput = Prisma.AtLeast<{
@@ -7096,6 +8402,7 @@ export namespace Prisma {
     inventory?: InventoryItemListRelationFilter
     finances?: FinancialRecordListRelationFilter
     tasks?: TaskListRelationFilter
+    spaces?: PropertySpaceListRelationFilter
   }, "id">
 
   export type PropertyOrderByWithAggregationInput = {
@@ -7116,6 +8423,54 @@ export namespace Prisma {
     name?: StringWithAggregatesFilter<"Property"> | string
     address?: StringWithAggregatesFilter<"Property"> | string
     colorCode?: StringWithAggregatesFilter<"Property"> | string
+  }
+
+  export type PropertySpaceWhereInput = {
+    AND?: PropertySpaceWhereInput | PropertySpaceWhereInput[]
+    OR?: PropertySpaceWhereInput[]
+    NOT?: PropertySpaceWhereInput | PropertySpaceWhereInput[]
+    id?: StringFilter<"PropertySpace"> | string
+    propertyId?: StringFilter<"PropertySpace"> | string
+    name?: StringFilter<"PropertySpace"> | string
+    property?: XOR<PropertyScalarRelationFilter, PropertyWhereInput>
+    inventory?: InventoryItemListRelationFilter
+  }
+
+  export type PropertySpaceOrderByWithRelationInput = {
+    id?: SortOrder
+    propertyId?: SortOrder
+    name?: SortOrder
+    property?: PropertyOrderByWithRelationInput
+    inventory?: InventoryItemOrderByRelationAggregateInput
+  }
+
+  export type PropertySpaceWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: PropertySpaceWhereInput | PropertySpaceWhereInput[]
+    OR?: PropertySpaceWhereInput[]
+    NOT?: PropertySpaceWhereInput | PropertySpaceWhereInput[]
+    propertyId?: StringFilter<"PropertySpace"> | string
+    name?: StringFilter<"PropertySpace"> | string
+    property?: XOR<PropertyScalarRelationFilter, PropertyWhereInput>
+    inventory?: InventoryItemListRelationFilter
+  }, "id">
+
+  export type PropertySpaceOrderByWithAggregationInput = {
+    id?: SortOrder
+    propertyId?: SortOrder
+    name?: SortOrder
+    _count?: PropertySpaceCountOrderByAggregateInput
+    _max?: PropertySpaceMaxOrderByAggregateInput
+    _min?: PropertySpaceMinOrderByAggregateInput
+  }
+
+  export type PropertySpaceScalarWhereWithAggregatesInput = {
+    AND?: PropertySpaceScalarWhereWithAggregatesInput | PropertySpaceScalarWhereWithAggregatesInput[]
+    OR?: PropertySpaceScalarWhereWithAggregatesInput[]
+    NOT?: PropertySpaceScalarWhereWithAggregatesInput | PropertySpaceScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"PropertySpace"> | string
+    propertyId?: StringWithAggregatesFilter<"PropertySpace"> | string
+    name?: StringWithAggregatesFilter<"PropertySpace"> | string
   }
 
   export type BookingWhereInput = {
@@ -7196,21 +8551,29 @@ export namespace Prisma {
     NOT?: InventoryItemWhereInput | InventoryItemWhereInput[]
     id?: StringFilter<"InventoryItem"> | string
     propertyId?: StringFilter<"InventoryItem"> | string
+    spaceId?: StringNullableFilter<"InventoryItem"> | string | null
     name?: StringFilter<"InventoryItem"> | string
     currentStock?: IntFilter<"InventoryItem"> | number
     minStock?: IntFilter<"InventoryItem"> | number
     unit?: StringFilter<"InventoryItem"> | string
+    category?: StringFilter<"InventoryItem"> | string
+    subCategory?: StringNullableFilter<"InventoryItem"> | string | null
     property?: XOR<PropertyScalarRelationFilter, PropertyWhereInput>
+    space?: XOR<PropertySpaceNullableScalarRelationFilter, PropertySpaceWhereInput> | null
   }
 
   export type InventoryItemOrderByWithRelationInput = {
     id?: SortOrder
     propertyId?: SortOrder
+    spaceId?: SortOrderInput | SortOrder
     name?: SortOrder
     currentStock?: SortOrder
     minStock?: SortOrder
     unit?: SortOrder
+    category?: SortOrder
+    subCategory?: SortOrderInput | SortOrder
     property?: PropertyOrderByWithRelationInput
+    space?: PropertySpaceOrderByWithRelationInput
   }
 
   export type InventoryItemWhereUniqueInput = Prisma.AtLeast<{
@@ -7219,20 +8582,27 @@ export namespace Prisma {
     OR?: InventoryItemWhereInput[]
     NOT?: InventoryItemWhereInput | InventoryItemWhereInput[]
     propertyId?: StringFilter<"InventoryItem"> | string
+    spaceId?: StringNullableFilter<"InventoryItem"> | string | null
     name?: StringFilter<"InventoryItem"> | string
     currentStock?: IntFilter<"InventoryItem"> | number
     minStock?: IntFilter<"InventoryItem"> | number
     unit?: StringFilter<"InventoryItem"> | string
+    category?: StringFilter<"InventoryItem"> | string
+    subCategory?: StringNullableFilter<"InventoryItem"> | string | null
     property?: XOR<PropertyScalarRelationFilter, PropertyWhereInput>
+    space?: XOR<PropertySpaceNullableScalarRelationFilter, PropertySpaceWhereInput> | null
   }, "id">
 
   export type InventoryItemOrderByWithAggregationInput = {
     id?: SortOrder
     propertyId?: SortOrder
+    spaceId?: SortOrderInput | SortOrder
     name?: SortOrder
     currentStock?: SortOrder
     minStock?: SortOrder
     unit?: SortOrder
+    category?: SortOrder
+    subCategory?: SortOrderInput | SortOrder
     _count?: InventoryItemCountOrderByAggregateInput
     _avg?: InventoryItemAvgOrderByAggregateInput
     _max?: InventoryItemMaxOrderByAggregateInput
@@ -7246,10 +8616,13 @@ export namespace Prisma {
     NOT?: InventoryItemScalarWhereWithAggregatesInput | InventoryItemScalarWhereWithAggregatesInput[]
     id?: StringWithAggregatesFilter<"InventoryItem"> | string
     propertyId?: StringWithAggregatesFilter<"InventoryItem"> | string
+    spaceId?: StringNullableWithAggregatesFilter<"InventoryItem"> | string | null
     name?: StringWithAggregatesFilter<"InventoryItem"> | string
     currentStock?: IntWithAggregatesFilter<"InventoryItem"> | number
     minStock?: IntWithAggregatesFilter<"InventoryItem"> | number
     unit?: StringWithAggregatesFilter<"InventoryItem"> | string
+    category?: StringWithAggregatesFilter<"InventoryItem"> | string
+    subCategory?: StringNullableWithAggregatesFilter<"InventoryItem"> | string | null
   }
 
   export type FinancialRecordWhereInput = {
@@ -7393,6 +8766,7 @@ export namespace Prisma {
     inventory?: InventoryItemCreateNestedManyWithoutPropertyInput
     finances?: FinancialRecordCreateNestedManyWithoutPropertyInput
     tasks?: TaskCreateNestedManyWithoutPropertyInput
+    spaces?: PropertySpaceCreateNestedManyWithoutPropertyInput
   }
 
   export type PropertyUncheckedCreateInput = {
@@ -7404,6 +8778,7 @@ export namespace Prisma {
     inventory?: InventoryItemUncheckedCreateNestedManyWithoutPropertyInput
     finances?: FinancialRecordUncheckedCreateNestedManyWithoutPropertyInput
     tasks?: TaskUncheckedCreateNestedManyWithoutPropertyInput
+    spaces?: PropertySpaceUncheckedCreateNestedManyWithoutPropertyInput
   }
 
   export type PropertyUpdateInput = {
@@ -7415,6 +8790,7 @@ export namespace Prisma {
     inventory?: InventoryItemUpdateManyWithoutPropertyNestedInput
     finances?: FinancialRecordUpdateManyWithoutPropertyNestedInput
     tasks?: TaskUpdateManyWithoutPropertyNestedInput
+    spaces?: PropertySpaceUpdateManyWithoutPropertyNestedInput
   }
 
   export type PropertyUncheckedUpdateInput = {
@@ -7426,6 +8802,7 @@ export namespace Prisma {
     inventory?: InventoryItemUncheckedUpdateManyWithoutPropertyNestedInput
     finances?: FinancialRecordUncheckedUpdateManyWithoutPropertyNestedInput
     tasks?: TaskUncheckedUpdateManyWithoutPropertyNestedInput
+    spaces?: PropertySpaceUncheckedUpdateManyWithoutPropertyNestedInput
   }
 
   export type PropertyCreateManyInput = {
@@ -7447,6 +8824,51 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     address?: StringFieldUpdateOperationsInput | string
     colorCode?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type PropertySpaceCreateInput = {
+    id?: string
+    name: string
+    property: PropertyCreateNestedOneWithoutSpacesInput
+    inventory?: InventoryItemCreateNestedManyWithoutSpaceInput
+  }
+
+  export type PropertySpaceUncheckedCreateInput = {
+    id?: string
+    propertyId: string
+    name: string
+    inventory?: InventoryItemUncheckedCreateNestedManyWithoutSpaceInput
+  }
+
+  export type PropertySpaceUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    property?: PropertyUpdateOneRequiredWithoutSpacesNestedInput
+    inventory?: InventoryItemUpdateManyWithoutSpaceNestedInput
+  }
+
+  export type PropertySpaceUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    propertyId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    inventory?: InventoryItemUncheckedUpdateManyWithoutSpaceNestedInput
+  }
+
+  export type PropertySpaceCreateManyInput = {
+    id?: string
+    propertyId: string
+    name: string
+  }
+
+  export type PropertySpaceUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type PropertySpaceUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    propertyId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
   }
 
   export type BookingCreateInput = {
@@ -7531,16 +8953,22 @@ export namespace Prisma {
     currentStock: number
     minStock: number
     unit: string
+    category?: string
+    subCategory?: string | null
     property: PropertyCreateNestedOneWithoutInventoryInput
+    space?: PropertySpaceCreateNestedOneWithoutInventoryInput
   }
 
   export type InventoryItemUncheckedCreateInput = {
     id?: string
     propertyId: string
+    spaceId?: string | null
     name: string
     currentStock: number
     minStock: number
     unit: string
+    category?: string
+    subCategory?: string | null
   }
 
   export type InventoryItemUpdateInput = {
@@ -7549,25 +8977,34 @@ export namespace Prisma {
     currentStock?: IntFieldUpdateOperationsInput | number
     minStock?: IntFieldUpdateOperationsInput | number
     unit?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    subCategory?: NullableStringFieldUpdateOperationsInput | string | null
     property?: PropertyUpdateOneRequiredWithoutInventoryNestedInput
+    space?: PropertySpaceUpdateOneWithoutInventoryNestedInput
   }
 
   export type InventoryItemUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     propertyId?: StringFieldUpdateOperationsInput | string
+    spaceId?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     currentStock?: IntFieldUpdateOperationsInput | number
     minStock?: IntFieldUpdateOperationsInput | number
     unit?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    subCategory?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type InventoryItemCreateManyInput = {
     id?: string
     propertyId: string
+    spaceId?: string | null
     name: string
     currentStock: number
     minStock: number
     unit: string
+    category?: string
+    subCategory?: string | null
   }
 
   export type InventoryItemUpdateManyMutationInput = {
@@ -7576,15 +9013,20 @@ export namespace Prisma {
     currentStock?: IntFieldUpdateOperationsInput | number
     minStock?: IntFieldUpdateOperationsInput | number
     unit?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    subCategory?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type InventoryItemUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
     propertyId?: StringFieldUpdateOperationsInput | string
+    spaceId?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     currentStock?: IntFieldUpdateOperationsInput | number
     minStock?: IntFieldUpdateOperationsInput | number
     unit?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    subCategory?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type FinancialRecordCreateInput = {
@@ -7764,6 +9206,12 @@ export namespace Prisma {
     none?: TaskWhereInput
   }
 
+  export type PropertySpaceListRelationFilter = {
+    every?: PropertySpaceWhereInput
+    some?: PropertySpaceWhereInput
+    none?: PropertySpaceWhereInput
+  }
+
   export type BookingOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
@@ -7777,6 +9225,10 @@ export namespace Prisma {
   }
 
   export type TaskOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type PropertySpaceOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -7819,6 +9271,29 @@ export namespace Prisma {
     _max?: NestedStringFilter<$PrismaModel>
   }
 
+  export type PropertyScalarRelationFilter = {
+    is?: PropertyWhereInput
+    isNot?: PropertyWhereInput
+  }
+
+  export type PropertySpaceCountOrderByAggregateInput = {
+    id?: SortOrder
+    propertyId?: SortOrder
+    name?: SortOrder
+  }
+
+  export type PropertySpaceMaxOrderByAggregateInput = {
+    id?: SortOrder
+    propertyId?: SortOrder
+    name?: SortOrder
+  }
+
+  export type PropertySpaceMinOrderByAggregateInput = {
+    id?: SortOrder
+    propertyId?: SortOrder
+    name?: SortOrder
+  }
+
   export type DateTimeFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
@@ -7839,11 +9314,6 @@ export namespace Prisma {
     gt?: number | FloatFieldRefInput<$PrismaModel>
     gte?: number | FloatFieldRefInput<$PrismaModel>
     not?: NestedFloatFilter<$PrismaModel> | number
-  }
-
-  export type PropertyScalarRelationFilter = {
-    is?: PropertyWhereInput
-    isNot?: PropertyWhereInput
   }
 
   export type BookingCountOrderByAggregateInput = {
@@ -7917,6 +9387,21 @@ export namespace Prisma {
     _max?: NestedFloatFilter<$PrismaModel>
   }
 
+  export type StringNullableFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel> | null
+    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    contains?: string | StringFieldRefInput<$PrismaModel>
+    startsWith?: string | StringFieldRefInput<$PrismaModel>
+    endsWith?: string | StringFieldRefInput<$PrismaModel>
+    mode?: QueryMode
+    not?: NestedStringNullableFilter<$PrismaModel> | string | null
+  }
+
   export type IntFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel>
     in?: number[] | ListIntFieldRefInput<$PrismaModel>
@@ -7928,13 +9413,26 @@ export namespace Prisma {
     not?: NestedIntFilter<$PrismaModel> | number
   }
 
+  export type PropertySpaceNullableScalarRelationFilter = {
+    is?: PropertySpaceWhereInput | null
+    isNot?: PropertySpaceWhereInput | null
+  }
+
+  export type SortOrderInput = {
+    sort: SortOrder
+    nulls?: NullsOrder
+  }
+
   export type InventoryItemCountOrderByAggregateInput = {
     id?: SortOrder
     propertyId?: SortOrder
+    spaceId?: SortOrder
     name?: SortOrder
     currentStock?: SortOrder
     minStock?: SortOrder
     unit?: SortOrder
+    category?: SortOrder
+    subCategory?: SortOrder
   }
 
   export type InventoryItemAvgOrderByAggregateInput = {
@@ -7945,24 +9443,48 @@ export namespace Prisma {
   export type InventoryItemMaxOrderByAggregateInput = {
     id?: SortOrder
     propertyId?: SortOrder
+    spaceId?: SortOrder
     name?: SortOrder
     currentStock?: SortOrder
     minStock?: SortOrder
     unit?: SortOrder
+    category?: SortOrder
+    subCategory?: SortOrder
   }
 
   export type InventoryItemMinOrderByAggregateInput = {
     id?: SortOrder
     propertyId?: SortOrder
+    spaceId?: SortOrder
     name?: SortOrder
     currentStock?: SortOrder
     minStock?: SortOrder
     unit?: SortOrder
+    category?: SortOrder
+    subCategory?: SortOrder
   }
 
   export type InventoryItemSumOrderByAggregateInput = {
     currentStock?: SortOrder
     minStock?: SortOrder
+  }
+
+  export type StringNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel> | null
+    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    contains?: string | StringFieldRefInput<$PrismaModel>
+    startsWith?: string | StringFieldRefInput<$PrismaModel>
+    endsWith?: string | StringFieldRefInput<$PrismaModel>
+    mode?: QueryMode
+    not?: NestedStringNullableWithAggregatesFilter<$PrismaModel> | string | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedStringNullableFilter<$PrismaModel>
+    _max?: NestedStringNullableFilter<$PrismaModel>
   }
 
   export type IntWithAggregatesFilter<$PrismaModel = never> = {
@@ -7979,26 +9501,6 @@ export namespace Prisma {
     _sum?: NestedIntFilter<$PrismaModel>
     _min?: NestedIntFilter<$PrismaModel>
     _max?: NestedIntFilter<$PrismaModel>
-  }
-
-  export type StringNullableFilter<$PrismaModel = never> = {
-    equals?: string | StringFieldRefInput<$PrismaModel> | null
-    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    lt?: string | StringFieldRefInput<$PrismaModel>
-    lte?: string | StringFieldRefInput<$PrismaModel>
-    gt?: string | StringFieldRefInput<$PrismaModel>
-    gte?: string | StringFieldRefInput<$PrismaModel>
-    contains?: string | StringFieldRefInput<$PrismaModel>
-    startsWith?: string | StringFieldRefInput<$PrismaModel>
-    endsWith?: string | StringFieldRefInput<$PrismaModel>
-    mode?: QueryMode
-    not?: NestedStringNullableFilter<$PrismaModel> | string | null
-  }
-
-  export type SortOrderInput = {
-    sort: SortOrder
-    nulls?: NullsOrder
   }
 
   export type FinancialRecordCountOrderByAggregateInput = {
@@ -8037,24 +9539,6 @@ export namespace Prisma {
 
   export type FinancialRecordSumOrderByAggregateInput = {
     amount?: SortOrder
-  }
-
-  export type StringNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: string | StringFieldRefInput<$PrismaModel> | null
-    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    lt?: string | StringFieldRefInput<$PrismaModel>
-    lte?: string | StringFieldRefInput<$PrismaModel>
-    gt?: string | StringFieldRefInput<$PrismaModel>
-    gte?: string | StringFieldRefInput<$PrismaModel>
-    contains?: string | StringFieldRefInput<$PrismaModel>
-    startsWith?: string | StringFieldRefInput<$PrismaModel>
-    endsWith?: string | StringFieldRefInput<$PrismaModel>
-    mode?: QueryMode
-    not?: NestedStringNullableWithAggregatesFilter<$PrismaModel> | string | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedStringNullableFilter<$PrismaModel>
-    _max?: NestedStringNullableFilter<$PrismaModel>
   }
 
   export type TaskCountOrderByAggregateInput = {
@@ -8115,6 +9599,13 @@ export namespace Prisma {
     connect?: TaskWhereUniqueInput | TaskWhereUniqueInput[]
   }
 
+  export type PropertySpaceCreateNestedManyWithoutPropertyInput = {
+    create?: XOR<PropertySpaceCreateWithoutPropertyInput, PropertySpaceUncheckedCreateWithoutPropertyInput> | PropertySpaceCreateWithoutPropertyInput[] | PropertySpaceUncheckedCreateWithoutPropertyInput[]
+    connectOrCreate?: PropertySpaceCreateOrConnectWithoutPropertyInput | PropertySpaceCreateOrConnectWithoutPropertyInput[]
+    createMany?: PropertySpaceCreateManyPropertyInputEnvelope
+    connect?: PropertySpaceWhereUniqueInput | PropertySpaceWhereUniqueInput[]
+  }
+
   export type BookingUncheckedCreateNestedManyWithoutPropertyInput = {
     create?: XOR<BookingCreateWithoutPropertyInput, BookingUncheckedCreateWithoutPropertyInput> | BookingCreateWithoutPropertyInput[] | BookingUncheckedCreateWithoutPropertyInput[]
     connectOrCreate?: BookingCreateOrConnectWithoutPropertyInput | BookingCreateOrConnectWithoutPropertyInput[]
@@ -8141,6 +9632,13 @@ export namespace Prisma {
     connectOrCreate?: TaskCreateOrConnectWithoutPropertyInput | TaskCreateOrConnectWithoutPropertyInput[]
     createMany?: TaskCreateManyPropertyInputEnvelope
     connect?: TaskWhereUniqueInput | TaskWhereUniqueInput[]
+  }
+
+  export type PropertySpaceUncheckedCreateNestedManyWithoutPropertyInput = {
+    create?: XOR<PropertySpaceCreateWithoutPropertyInput, PropertySpaceUncheckedCreateWithoutPropertyInput> | PropertySpaceCreateWithoutPropertyInput[] | PropertySpaceUncheckedCreateWithoutPropertyInput[]
+    connectOrCreate?: PropertySpaceCreateOrConnectWithoutPropertyInput | PropertySpaceCreateOrConnectWithoutPropertyInput[]
+    createMany?: PropertySpaceCreateManyPropertyInputEnvelope
+    connect?: PropertySpaceWhereUniqueInput | PropertySpaceWhereUniqueInput[]
   }
 
   export type StringFieldUpdateOperationsInput = {
@@ -8203,6 +9701,20 @@ export namespace Prisma {
     deleteMany?: TaskScalarWhereInput | TaskScalarWhereInput[]
   }
 
+  export type PropertySpaceUpdateManyWithoutPropertyNestedInput = {
+    create?: XOR<PropertySpaceCreateWithoutPropertyInput, PropertySpaceUncheckedCreateWithoutPropertyInput> | PropertySpaceCreateWithoutPropertyInput[] | PropertySpaceUncheckedCreateWithoutPropertyInput[]
+    connectOrCreate?: PropertySpaceCreateOrConnectWithoutPropertyInput | PropertySpaceCreateOrConnectWithoutPropertyInput[]
+    upsert?: PropertySpaceUpsertWithWhereUniqueWithoutPropertyInput | PropertySpaceUpsertWithWhereUniqueWithoutPropertyInput[]
+    createMany?: PropertySpaceCreateManyPropertyInputEnvelope
+    set?: PropertySpaceWhereUniqueInput | PropertySpaceWhereUniqueInput[]
+    disconnect?: PropertySpaceWhereUniqueInput | PropertySpaceWhereUniqueInput[]
+    delete?: PropertySpaceWhereUniqueInput | PropertySpaceWhereUniqueInput[]
+    connect?: PropertySpaceWhereUniqueInput | PropertySpaceWhereUniqueInput[]
+    update?: PropertySpaceUpdateWithWhereUniqueWithoutPropertyInput | PropertySpaceUpdateWithWhereUniqueWithoutPropertyInput[]
+    updateMany?: PropertySpaceUpdateManyWithWhereWithoutPropertyInput | PropertySpaceUpdateManyWithWhereWithoutPropertyInput[]
+    deleteMany?: PropertySpaceScalarWhereInput | PropertySpaceScalarWhereInput[]
+  }
+
   export type BookingUncheckedUpdateManyWithoutPropertyNestedInput = {
     create?: XOR<BookingCreateWithoutPropertyInput, BookingUncheckedCreateWithoutPropertyInput> | BookingCreateWithoutPropertyInput[] | BookingUncheckedCreateWithoutPropertyInput[]
     connectOrCreate?: BookingCreateOrConnectWithoutPropertyInput | BookingCreateOrConnectWithoutPropertyInput[]
@@ -8259,6 +9771,76 @@ export namespace Prisma {
     deleteMany?: TaskScalarWhereInput | TaskScalarWhereInput[]
   }
 
+  export type PropertySpaceUncheckedUpdateManyWithoutPropertyNestedInput = {
+    create?: XOR<PropertySpaceCreateWithoutPropertyInput, PropertySpaceUncheckedCreateWithoutPropertyInput> | PropertySpaceCreateWithoutPropertyInput[] | PropertySpaceUncheckedCreateWithoutPropertyInput[]
+    connectOrCreate?: PropertySpaceCreateOrConnectWithoutPropertyInput | PropertySpaceCreateOrConnectWithoutPropertyInput[]
+    upsert?: PropertySpaceUpsertWithWhereUniqueWithoutPropertyInput | PropertySpaceUpsertWithWhereUniqueWithoutPropertyInput[]
+    createMany?: PropertySpaceCreateManyPropertyInputEnvelope
+    set?: PropertySpaceWhereUniqueInput | PropertySpaceWhereUniqueInput[]
+    disconnect?: PropertySpaceWhereUniqueInput | PropertySpaceWhereUniqueInput[]
+    delete?: PropertySpaceWhereUniqueInput | PropertySpaceWhereUniqueInput[]
+    connect?: PropertySpaceWhereUniqueInput | PropertySpaceWhereUniqueInput[]
+    update?: PropertySpaceUpdateWithWhereUniqueWithoutPropertyInput | PropertySpaceUpdateWithWhereUniqueWithoutPropertyInput[]
+    updateMany?: PropertySpaceUpdateManyWithWhereWithoutPropertyInput | PropertySpaceUpdateManyWithWhereWithoutPropertyInput[]
+    deleteMany?: PropertySpaceScalarWhereInput | PropertySpaceScalarWhereInput[]
+  }
+
+  export type PropertyCreateNestedOneWithoutSpacesInput = {
+    create?: XOR<PropertyCreateWithoutSpacesInput, PropertyUncheckedCreateWithoutSpacesInput>
+    connectOrCreate?: PropertyCreateOrConnectWithoutSpacesInput
+    connect?: PropertyWhereUniqueInput
+  }
+
+  export type InventoryItemCreateNestedManyWithoutSpaceInput = {
+    create?: XOR<InventoryItemCreateWithoutSpaceInput, InventoryItemUncheckedCreateWithoutSpaceInput> | InventoryItemCreateWithoutSpaceInput[] | InventoryItemUncheckedCreateWithoutSpaceInput[]
+    connectOrCreate?: InventoryItemCreateOrConnectWithoutSpaceInput | InventoryItemCreateOrConnectWithoutSpaceInput[]
+    createMany?: InventoryItemCreateManySpaceInputEnvelope
+    connect?: InventoryItemWhereUniqueInput | InventoryItemWhereUniqueInput[]
+  }
+
+  export type InventoryItemUncheckedCreateNestedManyWithoutSpaceInput = {
+    create?: XOR<InventoryItemCreateWithoutSpaceInput, InventoryItemUncheckedCreateWithoutSpaceInput> | InventoryItemCreateWithoutSpaceInput[] | InventoryItemUncheckedCreateWithoutSpaceInput[]
+    connectOrCreate?: InventoryItemCreateOrConnectWithoutSpaceInput | InventoryItemCreateOrConnectWithoutSpaceInput[]
+    createMany?: InventoryItemCreateManySpaceInputEnvelope
+    connect?: InventoryItemWhereUniqueInput | InventoryItemWhereUniqueInput[]
+  }
+
+  export type PropertyUpdateOneRequiredWithoutSpacesNestedInput = {
+    create?: XOR<PropertyCreateWithoutSpacesInput, PropertyUncheckedCreateWithoutSpacesInput>
+    connectOrCreate?: PropertyCreateOrConnectWithoutSpacesInput
+    upsert?: PropertyUpsertWithoutSpacesInput
+    connect?: PropertyWhereUniqueInput
+    update?: XOR<XOR<PropertyUpdateToOneWithWhereWithoutSpacesInput, PropertyUpdateWithoutSpacesInput>, PropertyUncheckedUpdateWithoutSpacesInput>
+  }
+
+  export type InventoryItemUpdateManyWithoutSpaceNestedInput = {
+    create?: XOR<InventoryItemCreateWithoutSpaceInput, InventoryItemUncheckedCreateWithoutSpaceInput> | InventoryItemCreateWithoutSpaceInput[] | InventoryItemUncheckedCreateWithoutSpaceInput[]
+    connectOrCreate?: InventoryItemCreateOrConnectWithoutSpaceInput | InventoryItemCreateOrConnectWithoutSpaceInput[]
+    upsert?: InventoryItemUpsertWithWhereUniqueWithoutSpaceInput | InventoryItemUpsertWithWhereUniqueWithoutSpaceInput[]
+    createMany?: InventoryItemCreateManySpaceInputEnvelope
+    set?: InventoryItemWhereUniqueInput | InventoryItemWhereUniqueInput[]
+    disconnect?: InventoryItemWhereUniqueInput | InventoryItemWhereUniqueInput[]
+    delete?: InventoryItemWhereUniqueInput | InventoryItemWhereUniqueInput[]
+    connect?: InventoryItemWhereUniqueInput | InventoryItemWhereUniqueInput[]
+    update?: InventoryItemUpdateWithWhereUniqueWithoutSpaceInput | InventoryItemUpdateWithWhereUniqueWithoutSpaceInput[]
+    updateMany?: InventoryItemUpdateManyWithWhereWithoutSpaceInput | InventoryItemUpdateManyWithWhereWithoutSpaceInput[]
+    deleteMany?: InventoryItemScalarWhereInput | InventoryItemScalarWhereInput[]
+  }
+
+  export type InventoryItemUncheckedUpdateManyWithoutSpaceNestedInput = {
+    create?: XOR<InventoryItemCreateWithoutSpaceInput, InventoryItemUncheckedCreateWithoutSpaceInput> | InventoryItemCreateWithoutSpaceInput[] | InventoryItemUncheckedCreateWithoutSpaceInput[]
+    connectOrCreate?: InventoryItemCreateOrConnectWithoutSpaceInput | InventoryItemCreateOrConnectWithoutSpaceInput[]
+    upsert?: InventoryItemUpsertWithWhereUniqueWithoutSpaceInput | InventoryItemUpsertWithWhereUniqueWithoutSpaceInput[]
+    createMany?: InventoryItemCreateManySpaceInputEnvelope
+    set?: InventoryItemWhereUniqueInput | InventoryItemWhereUniqueInput[]
+    disconnect?: InventoryItemWhereUniqueInput | InventoryItemWhereUniqueInput[]
+    delete?: InventoryItemWhereUniqueInput | InventoryItemWhereUniqueInput[]
+    connect?: InventoryItemWhereUniqueInput | InventoryItemWhereUniqueInput[]
+    update?: InventoryItemUpdateWithWhereUniqueWithoutSpaceInput | InventoryItemUpdateWithWhereUniqueWithoutSpaceInput[]
+    updateMany?: InventoryItemUpdateManyWithWhereWithoutSpaceInput | InventoryItemUpdateManyWithWhereWithoutSpaceInput[]
+    deleteMany?: InventoryItemScalarWhereInput | InventoryItemScalarWhereInput[]
+  }
+
   export type PropertyCreateNestedOneWithoutBookingsInput = {
     create?: XOR<PropertyCreateWithoutBookingsInput, PropertyUncheckedCreateWithoutBookingsInput>
     connectOrCreate?: PropertyCreateOrConnectWithoutBookingsInput
@@ -8291,12 +9873,22 @@ export namespace Prisma {
     connect?: PropertyWhereUniqueInput
   }
 
+  export type PropertySpaceCreateNestedOneWithoutInventoryInput = {
+    create?: XOR<PropertySpaceCreateWithoutInventoryInput, PropertySpaceUncheckedCreateWithoutInventoryInput>
+    connectOrCreate?: PropertySpaceCreateOrConnectWithoutInventoryInput
+    connect?: PropertySpaceWhereUniqueInput
+  }
+
   export type IntFieldUpdateOperationsInput = {
     set?: number
     increment?: number
     decrement?: number
     multiply?: number
     divide?: number
+  }
+
+  export type NullableStringFieldUpdateOperationsInput = {
+    set?: string | null
   }
 
   export type PropertyUpdateOneRequiredWithoutInventoryNestedInput = {
@@ -8307,14 +9899,20 @@ export namespace Prisma {
     update?: XOR<XOR<PropertyUpdateToOneWithWhereWithoutInventoryInput, PropertyUpdateWithoutInventoryInput>, PropertyUncheckedUpdateWithoutInventoryInput>
   }
 
+  export type PropertySpaceUpdateOneWithoutInventoryNestedInput = {
+    create?: XOR<PropertySpaceCreateWithoutInventoryInput, PropertySpaceUncheckedCreateWithoutInventoryInput>
+    connectOrCreate?: PropertySpaceCreateOrConnectWithoutInventoryInput
+    upsert?: PropertySpaceUpsertWithoutInventoryInput
+    disconnect?: PropertySpaceWhereInput | boolean
+    delete?: PropertySpaceWhereInput | boolean
+    connect?: PropertySpaceWhereUniqueInput
+    update?: XOR<XOR<PropertySpaceUpdateToOneWithWhereWithoutInventoryInput, PropertySpaceUpdateWithoutInventoryInput>, PropertySpaceUncheckedUpdateWithoutInventoryInput>
+  }
+
   export type PropertyCreateNestedOneWithoutFinancesInput = {
     create?: XOR<PropertyCreateWithoutFinancesInput, PropertyUncheckedCreateWithoutFinancesInput>
     connectOrCreate?: PropertyCreateOrConnectWithoutFinancesInput
     connect?: PropertyWhereUniqueInput
-  }
-
-  export type NullableStringFieldUpdateOperationsInput = {
-    set?: string | null
   }
 
   export type PropertyUpdateOneRequiredWithoutFinancesNestedInput = {
@@ -8433,22 +10031,6 @@ export namespace Prisma {
     _max?: NestedFloatFilter<$PrismaModel>
   }
 
-  export type NestedIntWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel>
-    in?: number[] | ListIntFieldRefInput<$PrismaModel>
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntWithAggregatesFilter<$PrismaModel> | number
-    _count?: NestedIntFilter<$PrismaModel>
-    _avg?: NestedFloatFilter<$PrismaModel>
-    _sum?: NestedIntFilter<$PrismaModel>
-    _min?: NestedIntFilter<$PrismaModel>
-    _max?: NestedIntFilter<$PrismaModel>
-  }
-
   export type NestedStringNullableFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel> | null
     in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
@@ -8491,6 +10073,22 @@ export namespace Prisma {
     not?: NestedIntNullableFilter<$PrismaModel> | number | null
   }
 
+  export type NestedIntWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel>
+    in?: number[] | ListIntFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntWithAggregatesFilter<$PrismaModel> | number
+    _count?: NestedIntFilter<$PrismaModel>
+    _avg?: NestedFloatFilter<$PrismaModel>
+    _sum?: NestedIntFilter<$PrismaModel>
+    _min?: NestedIntFilter<$PrismaModel>
+    _max?: NestedIntFilter<$PrismaModel>
+  }
+
   export type BookingCreateWithoutPropertyInput = {
     id?: string
     guestName: string
@@ -8527,14 +10125,20 @@ export namespace Prisma {
     currentStock: number
     minStock: number
     unit: string
+    category?: string
+    subCategory?: string | null
+    space?: PropertySpaceCreateNestedOneWithoutInventoryInput
   }
 
   export type InventoryItemUncheckedCreateWithoutPropertyInput = {
     id?: string
+    spaceId?: string | null
     name: string
     currentStock: number
     minStock: number
     unit: string
+    category?: string
+    subCategory?: string | null
   }
 
   export type InventoryItemCreateOrConnectWithoutPropertyInput = {
@@ -8603,6 +10207,28 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type PropertySpaceCreateWithoutPropertyInput = {
+    id?: string
+    name: string
+    inventory?: InventoryItemCreateNestedManyWithoutSpaceInput
+  }
+
+  export type PropertySpaceUncheckedCreateWithoutPropertyInput = {
+    id?: string
+    name: string
+    inventory?: InventoryItemUncheckedCreateNestedManyWithoutSpaceInput
+  }
+
+  export type PropertySpaceCreateOrConnectWithoutPropertyInput = {
+    where: PropertySpaceWhereUniqueInput
+    create: XOR<PropertySpaceCreateWithoutPropertyInput, PropertySpaceUncheckedCreateWithoutPropertyInput>
+  }
+
+  export type PropertySpaceCreateManyPropertyInputEnvelope = {
+    data: PropertySpaceCreateManyPropertyInput | PropertySpaceCreateManyPropertyInput[]
+    skipDuplicates?: boolean
+  }
+
   export type BookingUpsertWithWhereUniqueWithoutPropertyInput = {
     where: BookingWhereUniqueInput
     update: XOR<BookingUpdateWithoutPropertyInput, BookingUncheckedUpdateWithoutPropertyInput>
@@ -8655,10 +10281,13 @@ export namespace Prisma {
     NOT?: InventoryItemScalarWhereInput | InventoryItemScalarWhereInput[]
     id?: StringFilter<"InventoryItem"> | string
     propertyId?: StringFilter<"InventoryItem"> | string
+    spaceId?: StringNullableFilter<"InventoryItem"> | string | null
     name?: StringFilter<"InventoryItem"> | string
     currentStock?: IntFilter<"InventoryItem"> | number
     minStock?: IntFilter<"InventoryItem"> | number
     unit?: StringFilter<"InventoryItem"> | string
+    category?: StringFilter<"InventoryItem"> | string
+    subCategory?: StringNullableFilter<"InventoryItem"> | string | null
   }
 
   export type FinancialRecordUpsertWithWhereUniqueWithoutPropertyInput = {
@@ -8719,6 +10348,139 @@ export namespace Prisma {
     type?: StringFilter<"Task"> | string
   }
 
+  export type PropertySpaceUpsertWithWhereUniqueWithoutPropertyInput = {
+    where: PropertySpaceWhereUniqueInput
+    update: XOR<PropertySpaceUpdateWithoutPropertyInput, PropertySpaceUncheckedUpdateWithoutPropertyInput>
+    create: XOR<PropertySpaceCreateWithoutPropertyInput, PropertySpaceUncheckedCreateWithoutPropertyInput>
+  }
+
+  export type PropertySpaceUpdateWithWhereUniqueWithoutPropertyInput = {
+    where: PropertySpaceWhereUniqueInput
+    data: XOR<PropertySpaceUpdateWithoutPropertyInput, PropertySpaceUncheckedUpdateWithoutPropertyInput>
+  }
+
+  export type PropertySpaceUpdateManyWithWhereWithoutPropertyInput = {
+    where: PropertySpaceScalarWhereInput
+    data: XOR<PropertySpaceUpdateManyMutationInput, PropertySpaceUncheckedUpdateManyWithoutPropertyInput>
+  }
+
+  export type PropertySpaceScalarWhereInput = {
+    AND?: PropertySpaceScalarWhereInput | PropertySpaceScalarWhereInput[]
+    OR?: PropertySpaceScalarWhereInput[]
+    NOT?: PropertySpaceScalarWhereInput | PropertySpaceScalarWhereInput[]
+    id?: StringFilter<"PropertySpace"> | string
+    propertyId?: StringFilter<"PropertySpace"> | string
+    name?: StringFilter<"PropertySpace"> | string
+  }
+
+  export type PropertyCreateWithoutSpacesInput = {
+    id?: string
+    name: string
+    address: string
+    colorCode: string
+    bookings?: BookingCreateNestedManyWithoutPropertyInput
+    inventory?: InventoryItemCreateNestedManyWithoutPropertyInput
+    finances?: FinancialRecordCreateNestedManyWithoutPropertyInput
+    tasks?: TaskCreateNestedManyWithoutPropertyInput
+  }
+
+  export type PropertyUncheckedCreateWithoutSpacesInput = {
+    id?: string
+    name: string
+    address: string
+    colorCode: string
+    bookings?: BookingUncheckedCreateNestedManyWithoutPropertyInput
+    inventory?: InventoryItemUncheckedCreateNestedManyWithoutPropertyInput
+    finances?: FinancialRecordUncheckedCreateNestedManyWithoutPropertyInput
+    tasks?: TaskUncheckedCreateNestedManyWithoutPropertyInput
+  }
+
+  export type PropertyCreateOrConnectWithoutSpacesInput = {
+    where: PropertyWhereUniqueInput
+    create: XOR<PropertyCreateWithoutSpacesInput, PropertyUncheckedCreateWithoutSpacesInput>
+  }
+
+  export type InventoryItemCreateWithoutSpaceInput = {
+    id?: string
+    name: string
+    currentStock: number
+    minStock: number
+    unit: string
+    category?: string
+    subCategory?: string | null
+    property: PropertyCreateNestedOneWithoutInventoryInput
+  }
+
+  export type InventoryItemUncheckedCreateWithoutSpaceInput = {
+    id?: string
+    propertyId: string
+    name: string
+    currentStock: number
+    minStock: number
+    unit: string
+    category?: string
+    subCategory?: string | null
+  }
+
+  export type InventoryItemCreateOrConnectWithoutSpaceInput = {
+    where: InventoryItemWhereUniqueInput
+    create: XOR<InventoryItemCreateWithoutSpaceInput, InventoryItemUncheckedCreateWithoutSpaceInput>
+  }
+
+  export type InventoryItemCreateManySpaceInputEnvelope = {
+    data: InventoryItemCreateManySpaceInput | InventoryItemCreateManySpaceInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type PropertyUpsertWithoutSpacesInput = {
+    update: XOR<PropertyUpdateWithoutSpacesInput, PropertyUncheckedUpdateWithoutSpacesInput>
+    create: XOR<PropertyCreateWithoutSpacesInput, PropertyUncheckedCreateWithoutSpacesInput>
+    where?: PropertyWhereInput
+  }
+
+  export type PropertyUpdateToOneWithWhereWithoutSpacesInput = {
+    where?: PropertyWhereInput
+    data: XOR<PropertyUpdateWithoutSpacesInput, PropertyUncheckedUpdateWithoutSpacesInput>
+  }
+
+  export type PropertyUpdateWithoutSpacesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    address?: StringFieldUpdateOperationsInput | string
+    colorCode?: StringFieldUpdateOperationsInput | string
+    bookings?: BookingUpdateManyWithoutPropertyNestedInput
+    inventory?: InventoryItemUpdateManyWithoutPropertyNestedInput
+    finances?: FinancialRecordUpdateManyWithoutPropertyNestedInput
+    tasks?: TaskUpdateManyWithoutPropertyNestedInput
+  }
+
+  export type PropertyUncheckedUpdateWithoutSpacesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    address?: StringFieldUpdateOperationsInput | string
+    colorCode?: StringFieldUpdateOperationsInput | string
+    bookings?: BookingUncheckedUpdateManyWithoutPropertyNestedInput
+    inventory?: InventoryItemUncheckedUpdateManyWithoutPropertyNestedInput
+    finances?: FinancialRecordUncheckedUpdateManyWithoutPropertyNestedInput
+    tasks?: TaskUncheckedUpdateManyWithoutPropertyNestedInput
+  }
+
+  export type InventoryItemUpsertWithWhereUniqueWithoutSpaceInput = {
+    where: InventoryItemWhereUniqueInput
+    update: XOR<InventoryItemUpdateWithoutSpaceInput, InventoryItemUncheckedUpdateWithoutSpaceInput>
+    create: XOR<InventoryItemCreateWithoutSpaceInput, InventoryItemUncheckedCreateWithoutSpaceInput>
+  }
+
+  export type InventoryItemUpdateWithWhereUniqueWithoutSpaceInput = {
+    where: InventoryItemWhereUniqueInput
+    data: XOR<InventoryItemUpdateWithoutSpaceInput, InventoryItemUncheckedUpdateWithoutSpaceInput>
+  }
+
+  export type InventoryItemUpdateManyWithWhereWithoutSpaceInput = {
+    where: InventoryItemScalarWhereInput
+    data: XOR<InventoryItemUpdateManyMutationInput, InventoryItemUncheckedUpdateManyWithoutSpaceInput>
+  }
+
   export type PropertyCreateWithoutBookingsInput = {
     id?: string
     name: string
@@ -8727,6 +10489,7 @@ export namespace Prisma {
     inventory?: InventoryItemCreateNestedManyWithoutPropertyInput
     finances?: FinancialRecordCreateNestedManyWithoutPropertyInput
     tasks?: TaskCreateNestedManyWithoutPropertyInput
+    spaces?: PropertySpaceCreateNestedManyWithoutPropertyInput
   }
 
   export type PropertyUncheckedCreateWithoutBookingsInput = {
@@ -8737,6 +10500,7 @@ export namespace Prisma {
     inventory?: InventoryItemUncheckedCreateNestedManyWithoutPropertyInput
     finances?: FinancialRecordUncheckedCreateNestedManyWithoutPropertyInput
     tasks?: TaskUncheckedCreateNestedManyWithoutPropertyInput
+    spaces?: PropertySpaceUncheckedCreateNestedManyWithoutPropertyInput
   }
 
   export type PropertyCreateOrConnectWithoutBookingsInput = {
@@ -8763,6 +10527,7 @@ export namespace Prisma {
     inventory?: InventoryItemUpdateManyWithoutPropertyNestedInput
     finances?: FinancialRecordUpdateManyWithoutPropertyNestedInput
     tasks?: TaskUpdateManyWithoutPropertyNestedInput
+    spaces?: PropertySpaceUpdateManyWithoutPropertyNestedInput
   }
 
   export type PropertyUncheckedUpdateWithoutBookingsInput = {
@@ -8773,6 +10538,7 @@ export namespace Prisma {
     inventory?: InventoryItemUncheckedUpdateManyWithoutPropertyNestedInput
     finances?: FinancialRecordUncheckedUpdateManyWithoutPropertyNestedInput
     tasks?: TaskUncheckedUpdateManyWithoutPropertyNestedInput
+    spaces?: PropertySpaceUncheckedUpdateManyWithoutPropertyNestedInput
   }
 
   export type PropertyCreateWithoutInventoryInput = {
@@ -8783,6 +10549,7 @@ export namespace Prisma {
     bookings?: BookingCreateNestedManyWithoutPropertyInput
     finances?: FinancialRecordCreateNestedManyWithoutPropertyInput
     tasks?: TaskCreateNestedManyWithoutPropertyInput
+    spaces?: PropertySpaceCreateNestedManyWithoutPropertyInput
   }
 
   export type PropertyUncheckedCreateWithoutInventoryInput = {
@@ -8793,11 +10560,29 @@ export namespace Prisma {
     bookings?: BookingUncheckedCreateNestedManyWithoutPropertyInput
     finances?: FinancialRecordUncheckedCreateNestedManyWithoutPropertyInput
     tasks?: TaskUncheckedCreateNestedManyWithoutPropertyInput
+    spaces?: PropertySpaceUncheckedCreateNestedManyWithoutPropertyInput
   }
 
   export type PropertyCreateOrConnectWithoutInventoryInput = {
     where: PropertyWhereUniqueInput
     create: XOR<PropertyCreateWithoutInventoryInput, PropertyUncheckedCreateWithoutInventoryInput>
+  }
+
+  export type PropertySpaceCreateWithoutInventoryInput = {
+    id?: string
+    name: string
+    property: PropertyCreateNestedOneWithoutSpacesInput
+  }
+
+  export type PropertySpaceUncheckedCreateWithoutInventoryInput = {
+    id?: string
+    propertyId: string
+    name: string
+  }
+
+  export type PropertySpaceCreateOrConnectWithoutInventoryInput = {
+    where: PropertySpaceWhereUniqueInput
+    create: XOR<PropertySpaceCreateWithoutInventoryInput, PropertySpaceUncheckedCreateWithoutInventoryInput>
   }
 
   export type PropertyUpsertWithoutInventoryInput = {
@@ -8819,6 +10604,7 @@ export namespace Prisma {
     bookings?: BookingUpdateManyWithoutPropertyNestedInput
     finances?: FinancialRecordUpdateManyWithoutPropertyNestedInput
     tasks?: TaskUpdateManyWithoutPropertyNestedInput
+    spaces?: PropertySpaceUpdateManyWithoutPropertyNestedInput
   }
 
   export type PropertyUncheckedUpdateWithoutInventoryInput = {
@@ -8829,6 +10615,30 @@ export namespace Prisma {
     bookings?: BookingUncheckedUpdateManyWithoutPropertyNestedInput
     finances?: FinancialRecordUncheckedUpdateManyWithoutPropertyNestedInput
     tasks?: TaskUncheckedUpdateManyWithoutPropertyNestedInput
+    spaces?: PropertySpaceUncheckedUpdateManyWithoutPropertyNestedInput
+  }
+
+  export type PropertySpaceUpsertWithoutInventoryInput = {
+    update: XOR<PropertySpaceUpdateWithoutInventoryInput, PropertySpaceUncheckedUpdateWithoutInventoryInput>
+    create: XOR<PropertySpaceCreateWithoutInventoryInput, PropertySpaceUncheckedCreateWithoutInventoryInput>
+    where?: PropertySpaceWhereInput
+  }
+
+  export type PropertySpaceUpdateToOneWithWhereWithoutInventoryInput = {
+    where?: PropertySpaceWhereInput
+    data: XOR<PropertySpaceUpdateWithoutInventoryInput, PropertySpaceUncheckedUpdateWithoutInventoryInput>
+  }
+
+  export type PropertySpaceUpdateWithoutInventoryInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    property?: PropertyUpdateOneRequiredWithoutSpacesNestedInput
+  }
+
+  export type PropertySpaceUncheckedUpdateWithoutInventoryInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    propertyId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
   }
 
   export type PropertyCreateWithoutFinancesInput = {
@@ -8839,6 +10649,7 @@ export namespace Prisma {
     bookings?: BookingCreateNestedManyWithoutPropertyInput
     inventory?: InventoryItemCreateNestedManyWithoutPropertyInput
     tasks?: TaskCreateNestedManyWithoutPropertyInput
+    spaces?: PropertySpaceCreateNestedManyWithoutPropertyInput
   }
 
   export type PropertyUncheckedCreateWithoutFinancesInput = {
@@ -8849,6 +10660,7 @@ export namespace Prisma {
     bookings?: BookingUncheckedCreateNestedManyWithoutPropertyInput
     inventory?: InventoryItemUncheckedCreateNestedManyWithoutPropertyInput
     tasks?: TaskUncheckedCreateNestedManyWithoutPropertyInput
+    spaces?: PropertySpaceUncheckedCreateNestedManyWithoutPropertyInput
   }
 
   export type PropertyCreateOrConnectWithoutFinancesInput = {
@@ -8875,6 +10687,7 @@ export namespace Prisma {
     bookings?: BookingUpdateManyWithoutPropertyNestedInput
     inventory?: InventoryItemUpdateManyWithoutPropertyNestedInput
     tasks?: TaskUpdateManyWithoutPropertyNestedInput
+    spaces?: PropertySpaceUpdateManyWithoutPropertyNestedInput
   }
 
   export type PropertyUncheckedUpdateWithoutFinancesInput = {
@@ -8885,6 +10698,7 @@ export namespace Prisma {
     bookings?: BookingUncheckedUpdateManyWithoutPropertyNestedInput
     inventory?: InventoryItemUncheckedUpdateManyWithoutPropertyNestedInput
     tasks?: TaskUncheckedUpdateManyWithoutPropertyNestedInput
+    spaces?: PropertySpaceUncheckedUpdateManyWithoutPropertyNestedInput
   }
 
   export type PropertyCreateWithoutTasksInput = {
@@ -8895,6 +10709,7 @@ export namespace Prisma {
     bookings?: BookingCreateNestedManyWithoutPropertyInput
     inventory?: InventoryItemCreateNestedManyWithoutPropertyInput
     finances?: FinancialRecordCreateNestedManyWithoutPropertyInput
+    spaces?: PropertySpaceCreateNestedManyWithoutPropertyInput
   }
 
   export type PropertyUncheckedCreateWithoutTasksInput = {
@@ -8905,6 +10720,7 @@ export namespace Prisma {
     bookings?: BookingUncheckedCreateNestedManyWithoutPropertyInput
     inventory?: InventoryItemUncheckedCreateNestedManyWithoutPropertyInput
     finances?: FinancialRecordUncheckedCreateNestedManyWithoutPropertyInput
+    spaces?: PropertySpaceUncheckedCreateNestedManyWithoutPropertyInput
   }
 
   export type PropertyCreateOrConnectWithoutTasksInput = {
@@ -8931,6 +10747,7 @@ export namespace Prisma {
     bookings?: BookingUpdateManyWithoutPropertyNestedInput
     inventory?: InventoryItemUpdateManyWithoutPropertyNestedInput
     finances?: FinancialRecordUpdateManyWithoutPropertyNestedInput
+    spaces?: PropertySpaceUpdateManyWithoutPropertyNestedInput
   }
 
   export type PropertyUncheckedUpdateWithoutTasksInput = {
@@ -8941,6 +10758,7 @@ export namespace Prisma {
     bookings?: BookingUncheckedUpdateManyWithoutPropertyNestedInput
     inventory?: InventoryItemUncheckedUpdateManyWithoutPropertyNestedInput
     finances?: FinancialRecordUncheckedUpdateManyWithoutPropertyNestedInput
+    spaces?: PropertySpaceUncheckedUpdateManyWithoutPropertyNestedInput
   }
 
   export type BookingCreateManyPropertyInput = {
@@ -8955,10 +10773,13 @@ export namespace Prisma {
 
   export type InventoryItemCreateManyPropertyInput = {
     id?: string
+    spaceId?: string | null
     name: string
     currentStock: number
     minStock: number
     unit: string
+    category?: string
+    subCategory?: string | null
   }
 
   export type FinancialRecordCreateManyPropertyInput = {
@@ -8977,6 +10798,11 @@ export namespace Prisma {
     dueDate: Date | string
     status: string
     type: string
+  }
+
+  export type PropertySpaceCreateManyPropertyInput = {
+    id?: string
+    name: string
   }
 
   export type BookingUpdateWithoutPropertyInput = {
@@ -9015,22 +10841,31 @@ export namespace Prisma {
     currentStock?: IntFieldUpdateOperationsInput | number
     minStock?: IntFieldUpdateOperationsInput | number
     unit?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    subCategory?: NullableStringFieldUpdateOperationsInput | string | null
+    space?: PropertySpaceUpdateOneWithoutInventoryNestedInput
   }
 
   export type InventoryItemUncheckedUpdateWithoutPropertyInput = {
     id?: StringFieldUpdateOperationsInput | string
+    spaceId?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     currentStock?: IntFieldUpdateOperationsInput | number
     minStock?: IntFieldUpdateOperationsInput | number
     unit?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    subCategory?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type InventoryItemUncheckedUpdateManyWithoutPropertyInput = {
     id?: StringFieldUpdateOperationsInput | string
+    spaceId?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     currentStock?: IntFieldUpdateOperationsInput | number
     minStock?: IntFieldUpdateOperationsInput | number
     unit?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    subCategory?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type FinancialRecordUpdateWithoutPropertyInput = {
@@ -9085,6 +10920,67 @@ export namespace Prisma {
     dueDate?: DateTimeFieldUpdateOperationsInput | Date | string
     status?: StringFieldUpdateOperationsInput | string
     type?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type PropertySpaceUpdateWithoutPropertyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    inventory?: InventoryItemUpdateManyWithoutSpaceNestedInput
+  }
+
+  export type PropertySpaceUncheckedUpdateWithoutPropertyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    inventory?: InventoryItemUncheckedUpdateManyWithoutSpaceNestedInput
+  }
+
+  export type PropertySpaceUncheckedUpdateManyWithoutPropertyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type InventoryItemCreateManySpaceInput = {
+    id?: string
+    propertyId: string
+    name: string
+    currentStock: number
+    minStock: number
+    unit: string
+    category?: string
+    subCategory?: string | null
+  }
+
+  export type InventoryItemUpdateWithoutSpaceInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    currentStock?: IntFieldUpdateOperationsInput | number
+    minStock?: IntFieldUpdateOperationsInput | number
+    unit?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    subCategory?: NullableStringFieldUpdateOperationsInput | string | null
+    property?: PropertyUpdateOneRequiredWithoutInventoryNestedInput
+  }
+
+  export type InventoryItemUncheckedUpdateWithoutSpaceInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    propertyId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    currentStock?: IntFieldUpdateOperationsInput | number
+    minStock?: IntFieldUpdateOperationsInput | number
+    unit?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    subCategory?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type InventoryItemUncheckedUpdateManyWithoutSpaceInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    propertyId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    currentStock?: IntFieldUpdateOperationsInput | number
+    minStock?: IntFieldUpdateOperationsInput | number
+    unit?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    subCategory?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
 

@@ -5,6 +5,12 @@ export interface Property {
   colorCode: string;
 }
 
+export interface PropertySpace {
+  id: string;
+  propertyId: string;
+  name: string;
+}
+
 export interface Booking {
   id: string;
   propertyId: string;
@@ -19,10 +25,13 @@ export interface Booking {
 export interface InventoryItem {
   id: string;
   propertyId: string;
+  spaceId: string | null;
   name: string;
   currentStock: number;
   minStock: number;
   unit: string;
+  category: 'General' | 'Reposición' | string;
+  subCategory: string | null; //vajilla, utensilios, electrodomesticos, consumibles
 }
 
 export interface FinancialRecord {
@@ -74,13 +83,37 @@ export const INITIAL_PROPERTIES: Property[] = [
   },
 ];
 
+// Default spaces for each property
+export const INITIAL_SPACES: PropertySpace[] = [
+  // Zen Oasis Cabin (prop-1)
+  { id: 'space-1-1', propertyId: 'prop-1', name: 'Habitación 1' },
+  { id: 'space-1-2', propertyId: 'prop-1', name: 'Cocina' },
+  { id: 'space-1-3', propertyId: 'prop-1', name: 'Comedor' },
+  { id: 'space-1-4', propertyId: 'prop-1', name: 'Living' },
+  { id: 'space-1-5', propertyId: 'prop-1', name: 'Baño' },
+
+  // Urban Heights Loft (prop-2)
+  { id: 'space-2-1', propertyId: 'prop-2', name: 'Habitación 1' },
+  { id: 'space-2-2', propertyId: 'prop-2', name: 'Cocina' },
+  { id: 'space-2-3', propertyId: 'prop-2', name: 'Comedor' },
+  { id: 'space-2-4', propertyId: 'prop-2', name: 'Living' },
+  { id: 'space-2-5', propertyId: 'prop-2', name: 'Baño' },
+
+  // Costa Brava Beachhouse (prop-3)
+  { id: 'space-3-1', propertyId: 'prop-3', name: 'Habitación 1' },
+  { id: 'space-3-2', propertyId: 'prop-3', name: 'Cocina' },
+  { id: 'space-3-3', propertyId: 'prop-3', name: 'Comedor' },
+  { id: 'space-3-4', propertyId: 'prop-3', name: 'Living' },
+  { id: 'space-3-5', propertyId: 'prop-3', name: 'Baño' },
+];
+
 export const INITIAL_BOOKINGS: Booking[] = [
   {
     id: 'book-1',
     propertyId: 'prop-1',
     guestName: 'Alejandro Rossi',
-    checkIn: getDateOffset(-3), // Check-in 3 days ago
-    checkOut: getDateOffset(0, -2), // Check-out today, 2 hours ago
+    checkIn: getDateOffset(-3),
+    checkOut: getDateOffset(0, -2),
     totalRevenue: 380.00,
     platform: 'Airbnb',
     status: 'CONFIRMED',
@@ -89,8 +122,8 @@ export const INITIAL_BOOKINGS: Booking[] = [
     id: 'book-2',
     propertyId: 'prop-1',
     guestName: 'Sarah Jenkins',
-    checkIn: getDateOffset(0, 2), // Check-in today, 2 hours from now
-    checkOut: getDateOffset(4), // Check-out in 4 days
+    checkIn: getDateOffset(0, 2),
+    checkOut: getDateOffset(4),
     totalRevenue: 520.00,
     platform: 'Airbnb',
     status: 'CONFIRMED',
@@ -99,8 +132,8 @@ export const INITIAL_BOOKINGS: Booking[] = [
     id: 'book-3',
     propertyId: 'prop-2',
     guestName: 'Mateo Fernández',
-    checkIn: getDateOffset(-1), // Check-in yesterday
-    checkOut: getDateOffset(3), // Check-out in 3 days
+    checkIn: getDateOffset(-1),
+    checkOut: getDateOffset(3),
     totalRevenue: 640.00,
     platform: 'Airbnb',
     status: 'CONFIRMED',
@@ -109,8 +142,8 @@ export const INITIAL_BOOKINGS: Booking[] = [
     id: 'book-4',
     propertyId: 'prop-3',
     guestName: 'Elena Rostova',
-    checkIn: getDateOffset(1), // Check-in tomorrow
-    checkOut: getDateOffset(6), // Check-out in 6 days
+    checkIn: getDateOffset(1),
+    checkOut: getDateOffset(6),
     totalRevenue: 1200.00,
     platform: 'Airbnb',
     status: 'PENDING',
@@ -131,51 +164,102 @@ export const INITIAL_INVENTORY: InventoryItem[] = [
   {
     id: 'inv-1',
     propertyId: 'prop-1',
+    spaceId: 'space-1-2', // Cocina
     name: 'Cápsulas de Café Nespresso',
     currentStock: 24,
     minStock: 15,
     unit: 'cápsulas',
+    category: 'General',
+    subCategory: 'Consumibles',
   },
   {
     id: 'inv-2',
     propertyId: 'prop-1',
+    spaceId: 'space-1-5', // Baño
     name: 'Toallas de baño extra',
     currentStock: 8,
     minStock: 6,
     unit: 'unidades',
+    category: 'General',
+    subCategory: null,
   },
   {
     id: 'inv-3',
     propertyId: 'prop-2',
+    spaceId: 'space-2-5', // Baño
     name: 'Jabón líquido corporal (recarga)',
-    currentStock: 2, // Low stock!
+    currentStock: 2,
     minStock: 5,
     unit: 'frascos',
+    category: 'General',
+    subCategory: null,
   },
   {
     id: 'inv-4',
     propertyId: 'prop-2',
+    spaceId: 'space-2-2', // Cocina
     name: 'Cápsulas de Café Nespresso',
-    currentStock: 12, // Low stock!
+    currentStock: 12,
     minStock: 15,
     unit: 'cápsulas',
+    category: 'General',
+    subCategory: 'Consumibles',
   },
   {
     id: 'inv-5',
     propertyId: 'prop-3',
+    spaceId: 'space-3-5', // Baño
     name: 'Papel higiénico premium',
     currentStock: 16,
     minStock: 12,
     unit: 'rollos',
+    category: 'General',
+    subCategory: null,
   },
   {
     id: 'inv-6',
     propertyId: 'prop-3',
+    spaceId: null, // Reposición (general)
     name: 'Kit de Amenities de Bienvenida',
     currentStock: 10,
     minStock: 8,
     unit: 'kits',
+    category: 'Reposición',
+    subCategory: null,
   },
+  {
+    id: 'inv-7',
+    propertyId: 'prop-1',
+    spaceId: 'space-1-2', // Cocina
+    name: 'Platos playeros',
+    currentStock: 6,
+    minStock: 6,
+    unit: 'unidades',
+    category: 'General',
+    subCategory: 'Vajilla y Cubertería',
+  },
+  {
+    id: 'inv-8',
+    propertyId: 'prop-1',
+    spaceId: 'space-1-2', // Cocina
+    name: 'Sartén antiadherente Tefal',
+    currentStock: 2,
+    minStock: 2,
+    unit: 'unidades',
+    category: 'General',
+    subCategory: 'Utensilios y Menaje',
+  },
+  {
+    id: 'inv-9',
+    propertyId: 'prop-1',
+    spaceId: 'space-1-2', // Cocina
+    name: 'Tostadora eléctrica',
+    currentStock: 1,
+    minStock: 1,
+    unit: 'unidad',
+    category: 'General',
+    subCategory: 'Electrodomésticos',
+  }
 ];
 
 export const INITIAL_FINANCES: FinancialRecord[] = [
@@ -241,7 +325,7 @@ export const INITIAL_TASKS: Task[] = [
     propertyId: 'prop-1',
     title: 'Limpieza Express y Cambio de Blancos',
     description: 'Preparar cabaña para el Check-in de Sarah Jenkins hoy a las 15:00. Salida de Alejandro Rossi completada.',
-    dueDate: getDateOffset(0), // Today
+    dueDate: getDateOffset(0),
     status: 'PENDING',
     type: 'CLEANING',
   },
@@ -250,7 +334,7 @@ export const INITIAL_TASKS: Task[] = [
     propertyId: 'prop-2',
     title: 'Reabastecer cápsulas y café',
     description: 'Stock actual por debajo del mínimo (12/15). Comprar pack de 30 unidades.',
-    dueDate: getDateOffset(0), // Today
+    dueDate: getDateOffset(0),
     status: 'IN_PROGRESS',
     type: 'CLEANING',
   },
@@ -259,7 +343,7 @@ export const INITIAL_TASKS: Task[] = [
     propertyId: 'prop-2',
     title: 'Fijar repisa del baño principal',
     description: 'Huésped reporta que la repisa flotante está floja. Traer taladro y taquetes.',
-    dueDate: getDateOffset(1), // Tomorrow
+    dueDate: getDateOffset(1),
     status: 'PENDING',
     type: 'MAINTENANCE',
   },
@@ -268,7 +352,7 @@ export const INITIAL_TASKS: Task[] = [
     propertyId: 'prop-3',
     title: 'Mantenimiento del filtro de la piscina',
     description: 'Revisión técnica de la bomba e inspección de cloro.',
-    dueDate: getDateOffset(-1), // Yesterday
+    dueDate: getDateOffset(-1),
     status: 'COMPLETED',
     type: 'MAINTENANCE',
   },

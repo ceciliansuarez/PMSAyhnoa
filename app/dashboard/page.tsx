@@ -11,6 +11,7 @@ export default async function DashboardPage() {
       inventory: true,
       finances: true,
       tasks: true,
+      spaces: true,
     },
   });
 
@@ -18,6 +19,7 @@ export default async function DashboardPage() {
     orderBy: { checkIn: 'asc' },
   });
 
+  const spaces = await db.spaces.findMany();
   const inventory = await db.inventory.findMany();
   const finances = await db.finances.findMany({
     orderBy: { date: 'desc' },
@@ -56,6 +58,7 @@ export default async function DashboardPage() {
   return (
     <DashboardClient
       properties={properties}
+      spaces={spaces}
       bookings={bookings}
       inventory={inventory}
       finances={finances}
