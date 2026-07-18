@@ -40,9 +40,6 @@ export default function Navigation({ isMock }: NavigationProps) {
               <p className="text-[10px] text-muted-foreground">Premium Edition</p>
             </div>
           </div>
-          <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">
-            3 Propiedades
-          </span>
         </div>
 
         {/* Links */}
