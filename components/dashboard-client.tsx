@@ -5,7 +5,8 @@ import {
   Building2, Plus, ArrowUpRight, ArrowDownRight, 
   CheckCircle2, Clock, AlertTriangle, PackagePlus, 
   DollarSign, ClipboardList, CalendarPlus, ShieldAlert, 
-  Pencil, Trash2, ChevronDown, ChevronUp, FolderPlus, Sparkles
+  Pencil, Trash2, ChevronDown, ChevronUp, FolderPlus, Sparkles,
+  ShoppingCart, RefreshCw
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Drawer from './drawer';
@@ -62,6 +63,7 @@ export default function DashboardClient({
   const [isInventoryOpen, setIsInventoryOpen] = useState(false);
   const [isNewInventoryOpen, setIsNewInventoryOpen] = useState(false);
   const [isEditInventoryOpen, setIsEditInventoryOpen] = useState(false);
+  const [isShoppingListOpen, setIsShoppingListOpen] = useState(false);
   
   // Space manager states
   const [isNewSpaceOpen, setIsNewSpaceOpen] = useState(false);
@@ -160,6 +162,9 @@ export default function DashboardClient({
 
   // Collapsed states for main spaces
   const [collapsedSpaces, setCollapsedSpaces] = useState<Record<string, boolean>>({});
+
+  // Checklist states for the shopping list
+  const [boughtItems, setBoughtItems] = useState<Record<string, boolean>>({});
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -514,6 +519,28 @@ export default function DashboardClient({
     }
   };
 
+  // SHOPPING LIST APPLY HANDLER
+  const handleApplyPurchases = async () => {
+    const checkedIds = Object.keys(boughtItems).filter(id => boughtItems[id]);
+    if (checkedIds.length === 0) return;
+    setIsSubmitting(true);
+    try {
+      for (const id of checkedIds) {
+        const item = inventory.find(i => i.id === id);
+        if (item) {
+          // Automatically restore item stock to its minimum limit
+          await adjustInventoryStock(id, item.minStock);
+        }
+      }
+      setIsShoppingListOpen(false);
+      setBoughtItems({});
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   // Helper variables for selects
   const activePropertyIdForBooking = bookingForm.propertyId || properties[0]?.id || '';
   const activePropertyIdForFinance = financeForm.propertyId || properties[0]?.id || '';
@@ -529,6 +556,35 @@ export default function DashboardClient({
 
   // Filters for low stock ALERTS: strictly itemType = OPERATIVO
   const lowStockAlerts = inventory.filter(i => (i.itemType || 'OPERATIVO') === 'OPERATIVO' && i.currentStock <= i.minStock);
+
+  // Filters for missing supplies: itemType = OPERATIVO and currentStock < minStock
+  const missingItems = inventory.filter(i => (i.itemType || 'OPERATIVO') === 'OPERATIVO' && i.currentStock < i.minStock);
+
+  // Hierarchical grouping for the Shopping List
+  const groupedShoppingList = properties.map(prop => {
+    const propItems = missingItems.filter(item => item.propertyId === prop.id);
+    
+    // Spaces under this property that have missing items
+    const spaceGroups = spaces
+      .filter(s => s.propertyId === prop.id)
+      .map(space => {
+        const items = propItems.filter(item => item.spaceId === space.id && item.category !== 'Reposición');
+        return { space, items };
+      })
+      .filter(g => g.items.length > 0);
+
+    // General restocking items under this property
+    const repoItems = propItems.filter(item => !item.spaceId || item.category === 'Reposición');
+
+    return {
+      property: prop,
+      spaces: spaceGroups,
+      reposicion: repoItems,
+      hasItems: spaceGroups.length > 0 || repoItems.length > 0
+    };
+  }).filter(p => p.hasItems);
+
+  const totalCheckedPurchasesCount = Object.keys(boughtItems).filter(id => boughtItems[id]).length;
 
   return (
     <div className="space-y-6">
@@ -621,7 +677,9 @@ export default function DashboardClient({
                       <p className="text-xs mt-1">Registra tu primer departamento para comenzar a operarlo.</p>
                     </div>
                     <button
-                      onClick={() => setIsPropertyOpen(true)}
+                      onClick={() => {
+                        setIsPropertyOpen(true);
+                      }}
                       className="mt-2 bg-primary text-primary-foreground font-semibold px-4 py-2 rounded-xl text-xs hover:bg-primary/95 transition-all"
                     >
                       Registrar Propiedad
@@ -946,9 +1004,59 @@ export default function DashboardClient({
       {/* INVENTORY PANEL */}
       {activeTab === 'inventory' && (
         <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-bold">Inventario de Propiedades</h3>
-            <span className="text-xs text-muted-foreground">Toca un ambiente para expandir o colapsar</span>
+          <div className="flex justify-between items-center gap-2">
+            <div className="min-w-0 flex-1">
+              <h3 className="text-lg font-bold tracking-tight">Inventario de Propiedades</h3>
+              <p className="text-xs text-muted-foreground mt-0.5 truncate hidden sm:block">Toca un ambiente para expandir o colapsar sus insumos</p>
+            </div>
+
+            <div className="flex gap-2 shrink-0">
+              {/* Shopping List Button (Only highlighted if items are missing) */}
+              {missingItems.length > 0 ? (
+                <button
+                  onClick={() => {
+                    setBoughtItems({});
+                    setIsShoppingListOpen(true);
+                  }}
+                  className="flex items-center justify-center gap-1.5 bg-amber-500/10 text-amber-600 dark:bg-amber-950/40 dark:text-amber-300 hover:bg-amber-500/20 border border-amber-500/20 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all active:scale-95 h-10"
+                >
+                  <ShoppingCart className="w-4 h-4 shrink-0" />
+                  <span>Lista Compras ({missingItems.length})</span>
+                </button>
+              ) : (
+                <button
+                  disabled
+                  className="flex items-center justify-center gap-1.5 bg-muted/40 text-muted-foreground border border-border px-3.5 py-2 rounded-xl text-xs font-semibold h-10 opacity-60"
+                >
+                  <ShoppingCart className="w-4 h-4 shrink-0" />
+                  <span>Stock Completo</span>
+                </button>
+              )}
+
+              {properties.length > 0 && (
+                <button
+                  onClick={() => {
+                    setInventoryForm({
+                      propertyId: properties[0].id,
+                      spaceId: spaces.filter(s => s.propertyId === properties[0].id)[0]?.id || '',
+                      name: '',
+                      currentStock: '',
+                      minStock: '',
+                      unit: 'unidades',
+                      category: 'General',
+                      subCategory: '',
+                      itemType: 'OPERATIVO'
+                    });
+                    setIsNewInventoryOpen(true);
+                  }}
+                  className="flex items-center justify-center gap-1.5 bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-border px-3.5 py-2 rounded-xl text-xs font-semibold transition-all active:scale-95 h-10"
+                >
+                  <Plus className="w-4 h-4 shrink-0" />
+                  <span className="hidden sm:inline">Nuevo Insumo</span>
+                  <span className="sm:hidden">Insumo</span>
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="grid grid-cols-1 gap-6">
@@ -974,7 +1082,7 @@ export default function DashboardClient({
                         setNewSpaceForm({ propertyId: prop.id, name: '' });
                         setIsNewSpaceOpen(true);
                       }}
-                      className="inline-flex items-center gap-1 text-[11px] font-bold text-primary bg-primary/5 hover:bg-primary/10 border border-primary/20 px-3 py-1.5 rounded-xl transition-all"
+                      className="inline-flex items-center gap-1 text-[11px] font-bold text-primary bg-primary/5 hover:bg-primary/10 border border-primary/20 px-3 py-1.5 rounded-xl transition-all animate-fade-in"
                     >
                       <FolderPlus className="w-3.5 h-3.5" />
                       <span>+ Ambiente</span>
@@ -990,7 +1098,7 @@ export default function DashboardClient({
                       const isCollapsed = !!collapsedSpaces[space.id];
 
                       return (
-                        <div key={space.id} className="border border-border/80 rounded-xl p-4 bg-muted/10 space-y-4">
+                        <div key={space.id} className="border border-border/80 rounded-xl p-4 bg-muted/10 space-y-4 animate-fade-in">
                           {/* Clickable Space Header */}
                           <div 
                             onClick={() => toggleSpaceCollapse(space.id)}
@@ -1197,7 +1305,7 @@ export default function DashboardClient({
                     })}
 
                     {/* 2. Reposición Category (Static block) */}
-                    <div className="border border-dashed border-border rounded-xl p-4 bg-muted/5 space-y-4">
+                    <div className="border border-dashed border-border rounded-xl p-4 bg-muted/5 space-y-4 animate-fade-in">
                       {/* Clickable Header for Reposición */}
                       <div 
                         onClick={() => toggleSpaceCollapse(`reposicion-${prop.id}`)}
@@ -1944,6 +2052,154 @@ export default function DashboardClient({
         )}
       </Drawer>
 
+      {/* 0.7. Shopping List Checklist Drawer */}
+      <Drawer
+        isOpen={isShoppingListOpen}
+        onClose={() => setIsShoppingListOpen(false)}
+        title="Lista de Compras Automática"
+      >
+        <div className="space-y-6 max-h-[70vh] overflow-y-auto pr-1">
+          <div className="p-4 border border-amber-500/10 bg-amber-500/5 text-amber-800 dark:text-amber-300 text-xs rounded-xl leading-relaxed flex items-start gap-2.5">
+            <AlertTriangle className="w-4 h-4 shrink-0 text-amber-500 mt-0.5" />
+            <div>
+              <span className="font-bold">Staff On-The-Go</span>: Ve marcando los insumos a medida que los compras en el supermercado. Al terminar, presiona el botón verde para registrar todo automáticamente en el inventario.
+            </div>
+          </div>
+
+          {groupedShoppingList.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground text-sm space-y-2">
+              <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto" />
+              <p className="font-bold text-foreground">¡Todo en Orden!</p>
+              <p className="text-xs">No hay insumos por debajo del mínimo en ninguna propiedad.</p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {groupedShoppingList.map(({ property, spaces: spaceGroups, reposicion }) => (
+                <div key={property.id} className="space-y-4 border-b border-border/60 pb-5 last:border-0 last:pb-0">
+                  {/* Property Title Group */}
+                  <h4 className="font-extrabold text-sm flex items-center gap-2 text-foreground">
+                    <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: property.colorCode }} />
+                    {property.name}
+                  </h4>
+
+                  <div className="space-y-4 pl-3">
+                    {/* Spaces inside the property */}
+                    {spaceGroups.map(({ space, items }) => (
+                      <div key={space.id} className="space-y-2">
+                        <h5 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{space.name}</h5>
+                        <div className="space-y-2">
+                          {items.map(item => {
+                            const neededAmount = item.minStock - item.currentStock;
+                            const isChecked = !!boughtItems[item.id];
+                            return (
+                              <label
+                                key={item.id}
+                                className={cn(
+                                  "flex items-center gap-3 p-3 border border-border rounded-xl bg-background cursor-pointer hover:bg-muted/30 transition-all select-none",
+                                  isChecked && "bg-emerald-500/5 border-emerald-500/20 dark:bg-emerald-950/20"
+                                )}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={isChecked}
+                                  onChange={() => {
+                                    setBoughtItems(prev => ({
+                                      ...prev,
+                                      [item.id]: !prev[item.id]
+                                    }));
+                                  }}
+                                  className="w-4 h-4 rounded text-primary focus:ring-ring border-border shrink-0 cursor-pointer"
+                                />
+                                <div className="flex-1 min-w-0">
+                                  <span className={cn(
+                                    "text-xs font-semibold text-foreground",
+                                    isChecked && "line-through text-muted-foreground"
+                                  )}>
+                                    {item.name}
+                                  </span>
+                                  <span className="text-[10px] text-muted-foreground block mt-0.5">
+                                    Comprar: <strong className="text-foreground">{neededAmount} {item.unit}</strong> (Stock: {item.currentStock} / Mín: {item.minStock})
+                                  </span>
+                                </div>
+                              </label>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+
+                    {/* General restocking items */}
+                    {reposicion.length > 0 && (
+                      <div key={`repo-${property.id}`} className="space-y-2">
+                        <h5 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Reposición y Carga Gral.</h5>
+                        <div className="space-y-2">
+                          {reposicion.map(item => {
+                            const neededAmount = item.minStock - item.currentStock;
+                            const isChecked = !!boughtItems[item.id];
+                            return (
+                              <label
+                                key={item.id}
+                                className={cn(
+                                  "flex items-center gap-3 p-3 border border-border rounded-xl bg-background cursor-pointer hover:bg-muted/30 transition-all select-none",
+                                  isChecked && "bg-emerald-500/5 border-emerald-500/20 dark:bg-emerald-950/20"
+                                )}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={isChecked}
+                                  onChange={() => {
+                                    setBoughtItems(prev => ({
+                                      ...prev,
+                                      [item.id]: !prev[item.id]
+                                    }));
+                                  }}
+                                  className="w-4 h-4 rounded text-primary focus:ring-ring border-border shrink-0 cursor-pointer"
+                                />
+                                <div className="flex-1 min-w-0">
+                                  <span className={cn(
+                                    "text-xs font-semibold text-foreground",
+                                    isChecked && "line-through text-muted-foreground"
+                                  )}>
+                                    {item.name}
+                                  </span>
+                                  <span className="text-[10px] text-muted-foreground block mt-0.5">
+                                    Comprar: <strong className="text-foreground">{neededAmount} {item.unit}</strong> (Stock: {item.currentStock} / Mín: {item.minStock})
+                                  </span>
+                                </div>
+                              </label>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Sync actions inside list drawer */}
+        {groupedShoppingList.length > 0 && (
+          <div className="pt-4 border-t border-border mt-4 flex flex-col gap-2">
+            <button
+              onClick={handleApplyPurchases}
+              disabled={isSubmitting || totalCheckedPurchasesCount === 0}
+              className="w-full bg-emerald-600 text-white font-bold py-3 rounded-xl hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:hover:bg-emerald-600 h-12 flex items-center justify-center gap-2"
+            >
+              <RefreshCw className={cn("w-4 h-4 shrink-0", isSubmitting && "animate-spin")} />
+              <span>Aplicar {totalCheckedPurchasesCount} Compras al Inventario</span>
+            </button>
+            <button
+              onClick={() => setIsShoppingListOpen(false)}
+              className="w-full bg-secondary text-secondary-foreground hover:bg-muted font-semibold py-2.5 rounded-xl transition-colors h-11 text-xs"
+            >
+              Cerrar Lista
+            </button>
+          </div>
+        )}
+      </Drawer>
+
       {/* 1. Booking Drawer */}
       <Drawer
         isOpen={isBookingOpen}
@@ -2072,7 +2328,7 @@ export default function DashboardClient({
       <Drawer
         isOpen={isFinanceOpen}
         onClose={() => setIsFinanceOpen(false)}
-        title="Registrar Ingreso u Gasto"
+        title="Registrar Gasto o Ingreso"
       >
         {properties.length === 0 ? (
           <div className="space-y-4 text-center py-4">
