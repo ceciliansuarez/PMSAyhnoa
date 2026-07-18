@@ -4827,6 +4827,7 @@ export namespace Prisma {
     unit: string | null
     category: string | null
     subCategory: string | null
+    itemType: string | null
   }
 
   export type InventoryItemMaxAggregateOutputType = {
@@ -4839,6 +4840,7 @@ export namespace Prisma {
     unit: string | null
     category: string | null
     subCategory: string | null
+    itemType: string | null
   }
 
   export type InventoryItemCountAggregateOutputType = {
@@ -4851,6 +4853,7 @@ export namespace Prisma {
     unit: number
     category: number
     subCategory: number
+    itemType: number
     _all: number
   }
 
@@ -4875,6 +4878,7 @@ export namespace Prisma {
     unit?: true
     category?: true
     subCategory?: true
+    itemType?: true
   }
 
   export type InventoryItemMaxAggregateInputType = {
@@ -4887,6 +4891,7 @@ export namespace Prisma {
     unit?: true
     category?: true
     subCategory?: true
+    itemType?: true
   }
 
   export type InventoryItemCountAggregateInputType = {
@@ -4899,6 +4904,7 @@ export namespace Prisma {
     unit?: true
     category?: true
     subCategory?: true
+    itemType?: true
     _all?: true
   }
 
@@ -4998,6 +5004,7 @@ export namespace Prisma {
     unit: string
     category: string
     subCategory: string | null
+    itemType: string
     _count: InventoryItemCountAggregateOutputType | null
     _avg: InventoryItemAvgAggregateOutputType | null
     _sum: InventoryItemSumAggregateOutputType | null
@@ -5029,6 +5036,7 @@ export namespace Prisma {
     unit?: boolean
     category?: boolean
     subCategory?: boolean
+    itemType?: boolean
     property?: boolean | PropertyDefaultArgs<ExtArgs>
     space?: boolean | InventoryItem$spaceArgs<ExtArgs>
   }, ExtArgs["result"]["inventoryItem"]>
@@ -5043,6 +5051,7 @@ export namespace Prisma {
     unit?: boolean
     category?: boolean
     subCategory?: boolean
+    itemType?: boolean
     property?: boolean | PropertyDefaultArgs<ExtArgs>
     space?: boolean | InventoryItem$spaceArgs<ExtArgs>
   }, ExtArgs["result"]["inventoryItem"]>
@@ -5057,6 +5066,7 @@ export namespace Prisma {
     unit?: boolean
     category?: boolean
     subCategory?: boolean
+    itemType?: boolean
     property?: boolean | PropertyDefaultArgs<ExtArgs>
     space?: boolean | InventoryItem$spaceArgs<ExtArgs>
   }, ExtArgs["result"]["inventoryItem"]>
@@ -5071,9 +5081,10 @@ export namespace Prisma {
     unit?: boolean
     category?: boolean
     subCategory?: boolean
+    itemType?: boolean
   }
 
-  export type InventoryItemOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "propertyId" | "spaceId" | "name" | "currentStock" | "minStock" | "unit" | "category" | "subCategory", ExtArgs["result"]["inventoryItem"]>
+  export type InventoryItemOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "propertyId" | "spaceId" | "name" | "currentStock" | "minStock" | "unit" | "category" | "subCategory" | "itemType", ExtArgs["result"]["inventoryItem"]>
   export type InventoryItemInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     property?: boolean | PropertyDefaultArgs<ExtArgs>
     space?: boolean | InventoryItem$spaceArgs<ExtArgs>
@@ -5103,6 +5114,7 @@ export namespace Prisma {
       unit: string
       category: string
       subCategory: string | null
+      itemType: string
     }, ExtArgs["result"]["inventoryItem"]>
     composites: {}
   }
@@ -5537,6 +5549,7 @@ export namespace Prisma {
     readonly unit: FieldRef<"InventoryItem", 'String'>
     readonly category: FieldRef<"InventoryItem", 'String'>
     readonly subCategory: FieldRef<"InventoryItem", 'String'>
+    readonly itemType: FieldRef<"InventoryItem", 'String'>
   }
     
 
@@ -8243,7 +8256,8 @@ export namespace Prisma {
     minStock: 'minStock',
     unit: 'unit',
     category: 'category',
-    subCategory: 'subCategory'
+    subCategory: 'subCategory',
+    itemType: 'itemType'
   };
 
   export type InventoryItemScalarFieldEnum = (typeof InventoryItemScalarFieldEnum)[keyof typeof InventoryItemScalarFieldEnum]
@@ -8558,6 +8572,7 @@ export namespace Prisma {
     unit?: StringFilter<"InventoryItem"> | string
     category?: StringFilter<"InventoryItem"> | string
     subCategory?: StringNullableFilter<"InventoryItem"> | string | null
+    itemType?: StringFilter<"InventoryItem"> | string
     property?: XOR<PropertyScalarRelationFilter, PropertyWhereInput>
     space?: XOR<PropertySpaceNullableScalarRelationFilter, PropertySpaceWhereInput> | null
   }
@@ -8572,6 +8587,7 @@ export namespace Prisma {
     unit?: SortOrder
     category?: SortOrder
     subCategory?: SortOrderInput | SortOrder
+    itemType?: SortOrder
     property?: PropertyOrderByWithRelationInput
     space?: PropertySpaceOrderByWithRelationInput
   }
@@ -8589,6 +8605,7 @@ export namespace Prisma {
     unit?: StringFilter<"InventoryItem"> | string
     category?: StringFilter<"InventoryItem"> | string
     subCategory?: StringNullableFilter<"InventoryItem"> | string | null
+    itemType?: StringFilter<"InventoryItem"> | string
     property?: XOR<PropertyScalarRelationFilter, PropertyWhereInput>
     space?: XOR<PropertySpaceNullableScalarRelationFilter, PropertySpaceWhereInput> | null
   }, "id">
@@ -8603,6 +8620,7 @@ export namespace Prisma {
     unit?: SortOrder
     category?: SortOrder
     subCategory?: SortOrderInput | SortOrder
+    itemType?: SortOrder
     _count?: InventoryItemCountOrderByAggregateInput
     _avg?: InventoryItemAvgOrderByAggregateInput
     _max?: InventoryItemMaxOrderByAggregateInput
@@ -8623,6 +8641,7 @@ export namespace Prisma {
     unit?: StringWithAggregatesFilter<"InventoryItem"> | string
     category?: StringWithAggregatesFilter<"InventoryItem"> | string
     subCategory?: StringNullableWithAggregatesFilter<"InventoryItem"> | string | null
+    itemType?: StringWithAggregatesFilter<"InventoryItem"> | string
   }
 
   export type FinancialRecordWhereInput = {
@@ -8955,6 +8974,7 @@ export namespace Prisma {
     unit: string
     category?: string
     subCategory?: string | null
+    itemType?: string
     property: PropertyCreateNestedOneWithoutInventoryInput
     space?: PropertySpaceCreateNestedOneWithoutInventoryInput
   }
@@ -8969,6 +8989,7 @@ export namespace Prisma {
     unit: string
     category?: string
     subCategory?: string | null
+    itemType?: string
   }
 
   export type InventoryItemUpdateInput = {
@@ -8979,6 +9000,7 @@ export namespace Prisma {
     unit?: StringFieldUpdateOperationsInput | string
     category?: StringFieldUpdateOperationsInput | string
     subCategory?: NullableStringFieldUpdateOperationsInput | string | null
+    itemType?: StringFieldUpdateOperationsInput | string
     property?: PropertyUpdateOneRequiredWithoutInventoryNestedInput
     space?: PropertySpaceUpdateOneWithoutInventoryNestedInput
   }
@@ -8993,6 +9015,7 @@ export namespace Prisma {
     unit?: StringFieldUpdateOperationsInput | string
     category?: StringFieldUpdateOperationsInput | string
     subCategory?: NullableStringFieldUpdateOperationsInput | string | null
+    itemType?: StringFieldUpdateOperationsInput | string
   }
 
   export type InventoryItemCreateManyInput = {
@@ -9005,6 +9028,7 @@ export namespace Prisma {
     unit: string
     category?: string
     subCategory?: string | null
+    itemType?: string
   }
 
   export type InventoryItemUpdateManyMutationInput = {
@@ -9015,6 +9039,7 @@ export namespace Prisma {
     unit?: StringFieldUpdateOperationsInput | string
     category?: StringFieldUpdateOperationsInput | string
     subCategory?: NullableStringFieldUpdateOperationsInput | string | null
+    itemType?: StringFieldUpdateOperationsInput | string
   }
 
   export type InventoryItemUncheckedUpdateManyInput = {
@@ -9027,6 +9052,7 @@ export namespace Prisma {
     unit?: StringFieldUpdateOperationsInput | string
     category?: StringFieldUpdateOperationsInput | string
     subCategory?: NullableStringFieldUpdateOperationsInput | string | null
+    itemType?: StringFieldUpdateOperationsInput | string
   }
 
   export type FinancialRecordCreateInput = {
@@ -9433,6 +9459,7 @@ export namespace Prisma {
     unit?: SortOrder
     category?: SortOrder
     subCategory?: SortOrder
+    itemType?: SortOrder
   }
 
   export type InventoryItemAvgOrderByAggregateInput = {
@@ -9450,6 +9477,7 @@ export namespace Prisma {
     unit?: SortOrder
     category?: SortOrder
     subCategory?: SortOrder
+    itemType?: SortOrder
   }
 
   export type InventoryItemMinOrderByAggregateInput = {
@@ -9462,6 +9490,7 @@ export namespace Prisma {
     unit?: SortOrder
     category?: SortOrder
     subCategory?: SortOrder
+    itemType?: SortOrder
   }
 
   export type InventoryItemSumOrderByAggregateInput = {
@@ -10127,6 +10156,7 @@ export namespace Prisma {
     unit: string
     category?: string
     subCategory?: string | null
+    itemType?: string
     space?: PropertySpaceCreateNestedOneWithoutInventoryInput
   }
 
@@ -10139,6 +10169,7 @@ export namespace Prisma {
     unit: string
     category?: string
     subCategory?: string | null
+    itemType?: string
   }
 
   export type InventoryItemCreateOrConnectWithoutPropertyInput = {
@@ -10288,6 +10319,7 @@ export namespace Prisma {
     unit?: StringFilter<"InventoryItem"> | string
     category?: StringFilter<"InventoryItem"> | string
     subCategory?: StringNullableFilter<"InventoryItem"> | string | null
+    itemType?: StringFilter<"InventoryItem"> | string
   }
 
   export type FinancialRecordUpsertWithWhereUniqueWithoutPropertyInput = {
@@ -10408,6 +10440,7 @@ export namespace Prisma {
     unit: string
     category?: string
     subCategory?: string | null
+    itemType?: string
     property: PropertyCreateNestedOneWithoutInventoryInput
   }
 
@@ -10420,6 +10453,7 @@ export namespace Prisma {
     unit: string
     category?: string
     subCategory?: string | null
+    itemType?: string
   }
 
   export type InventoryItemCreateOrConnectWithoutSpaceInput = {
@@ -10780,6 +10814,7 @@ export namespace Prisma {
     unit: string
     category?: string
     subCategory?: string | null
+    itemType?: string
   }
 
   export type FinancialRecordCreateManyPropertyInput = {
@@ -10843,6 +10878,7 @@ export namespace Prisma {
     unit?: StringFieldUpdateOperationsInput | string
     category?: StringFieldUpdateOperationsInput | string
     subCategory?: NullableStringFieldUpdateOperationsInput | string | null
+    itemType?: StringFieldUpdateOperationsInput | string
     space?: PropertySpaceUpdateOneWithoutInventoryNestedInput
   }
 
@@ -10855,6 +10891,7 @@ export namespace Prisma {
     unit?: StringFieldUpdateOperationsInput | string
     category?: StringFieldUpdateOperationsInput | string
     subCategory?: NullableStringFieldUpdateOperationsInput | string | null
+    itemType?: StringFieldUpdateOperationsInput | string
   }
 
   export type InventoryItemUncheckedUpdateManyWithoutPropertyInput = {
@@ -10866,6 +10903,7 @@ export namespace Prisma {
     unit?: StringFieldUpdateOperationsInput | string
     category?: StringFieldUpdateOperationsInput | string
     subCategory?: NullableStringFieldUpdateOperationsInput | string | null
+    itemType?: StringFieldUpdateOperationsInput | string
   }
 
   export type FinancialRecordUpdateWithoutPropertyInput = {
@@ -10948,6 +10986,7 @@ export namespace Prisma {
     unit: string
     category?: string
     subCategory?: string | null
+    itemType?: string
   }
 
   export type InventoryItemUpdateWithoutSpaceInput = {
@@ -10958,6 +10997,7 @@ export namespace Prisma {
     unit?: StringFieldUpdateOperationsInput | string
     category?: StringFieldUpdateOperationsInput | string
     subCategory?: NullableStringFieldUpdateOperationsInput | string | null
+    itemType?: StringFieldUpdateOperationsInput | string
     property?: PropertyUpdateOneRequiredWithoutInventoryNestedInput
   }
 
@@ -10970,6 +11010,7 @@ export namespace Prisma {
     unit?: StringFieldUpdateOperationsInput | string
     category?: StringFieldUpdateOperationsInput | string
     subCategory?: NullableStringFieldUpdateOperationsInput | string | null
+    itemType?: StringFieldUpdateOperationsInput | string
   }
 
   export type InventoryItemUncheckedUpdateManyWithoutSpaceInput = {
@@ -10981,6 +11022,7 @@ export namespace Prisma {
     unit?: StringFieldUpdateOperationsInput | string
     category?: StringFieldUpdateOperationsInput | string
     subCategory?: NullableStringFieldUpdateOperationsInput | string | null
+    itemType?: StringFieldUpdateOperationsInput | string
   }
 
 

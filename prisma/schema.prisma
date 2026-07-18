@@ -51,6 +51,7 @@ model InventoryItem {
   unit         String         // Ej. "unidades", "cápsulas", "paquetes"
   category     String         @default("General") // "General", "Reposición"
   subCategory  String?        // Usado en Cocina (vajilla, electrodomésticos, etc.)
+  itemType     String         @default("OPERATIVO") // "OPERATIVO" o "ACTIVO"
 }
 
 model FinancialRecord {

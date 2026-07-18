@@ -281,6 +281,7 @@ export const db = {
         category: args.data.category || 'General',
         subCategory: args.data.subCategory || null,
         propertyId: args.data.propertyId,
+        itemType: args.data.itemType || 'OPERATIVO',
       };
       mockDb.inventory.push(newInventory);
       return newInventory;

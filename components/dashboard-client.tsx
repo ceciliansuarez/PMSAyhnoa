@@ -5,7 +5,7 @@ import {
   Building2, Plus, ArrowUpRight, ArrowDownRight, 
   CheckCircle2, Clock, AlertTriangle, PackagePlus, 
   DollarSign, ClipboardList, CalendarPlus, ShieldAlert, 
-  Pencil, Trash2, ChevronDown, ChevronUp, FolderPlus
+  Pencil, Trash2, ChevronDown, ChevronUp, FolderPlus, Sparkles
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Drawer from './drawer';
@@ -23,7 +23,8 @@ import {
   deleteSpace,
   createInventoryItem,
   updateInventoryItem,
-  deleteInventoryItem
+  deleteInventoryItem,
+  seedKitchenEquipment
 } from '@/app/actions/pms-actions';
 
 interface DashboardClientProps {
@@ -115,13 +116,14 @@ export default function DashboardClient({
 
   const [inventoryForm, setInventoryForm] = useState({
     propertyId: properties[0]?.id || '',
-    spaceId: '', // space id or empty (for Reposición)
+    spaceId: '', 
     name: '',
     currentStock: '',
     minStock: '',
     unit: 'unidades',
-    category: 'General', // General, Reposición
-    subCategory: '', // Used for Cocina (vajilla, etc.)
+    category: 'General', 
+    subCategory: '', 
+    itemType: 'OPERATIVO', 
   });
 
   const [editInventoryForm, setEditInventoryForm] = useState({
@@ -134,6 +136,7 @@ export default function DashboardClient({
     unit: 'unidades',
     category: 'General',
     subCategory: '',
+    itemType: 'OPERATIVO',
   });
 
   const [newSpaceForm, setNewSpaceForm] = useState({
@@ -341,11 +344,12 @@ export default function DashboardClient({
   const handleInventorySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const activePropId = inventoryForm.propertyId || properties[0]?.id;
-    if (!activePropId || !inventoryForm.name || !inventoryForm.currentStock || !inventoryForm.minStock) return;
+    if (!activePropId || !inventoryForm.name || !inventoryForm.currentStock) return;
     
     const targetSpace = spaces.find(s => s.id === inventoryForm.spaceId);
     const isKitchen = targetSpace?.name.toLowerCase() === 'cocina';
-    
+    const finalMinStock = inventoryForm.itemType === 'ACTIVO' ? 0 : parseInt(inventoryForm.minStock || '0');
+
     setIsSubmitting(true);
     try {
       await createInventoryItem({
@@ -353,10 +357,11 @@ export default function DashboardClient({
         spaceId: inventoryForm.category === 'Reposición' ? undefined : inventoryForm.spaceId,
         name: inventoryForm.name,
         currentStock: parseInt(inventoryForm.currentStock),
-        minStock: parseInt(inventoryForm.minStock),
+        minStock: finalMinStock,
         unit: inventoryForm.unit,
         category: inventoryForm.category,
-        subCategory: isKitchen ? inventoryForm.subCategory : undefined
+        subCategory: isKitchen ? inventoryForm.subCategory : undefined,
+        itemType: inventoryForm.itemType
       });
       setIsNewInventoryOpen(false);
       setInventoryForm({
@@ -367,7 +372,8 @@ export default function DashboardClient({
         minStock: '',
         unit: 'unidades',
         category: 'General',
-        subCategory: ''
+        subCategory: '',
+        itemType: 'OPERATIVO'
       });
     } catch (err) {
       console.error(err);
@@ -378,10 +384,11 @@ export default function DashboardClient({
 
   const handleEditInventorySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editInventoryForm.id || !editInventoryForm.name || !editInventoryForm.currentStock || !editInventoryForm.minStock) return;
+    if (!editInventoryForm.id || !editInventoryForm.name || !editInventoryForm.currentStock) return;
     
     const targetSpace = spaces.find(s => s.id === editInventoryForm.spaceId);
     const isKitchen = targetSpace?.name.toLowerCase() === 'cocina';
+    const finalMinStock = editInventoryForm.itemType === 'ACTIVO' ? 0 : parseInt(editInventoryForm.minStock || '0');
 
     setIsSubmitting(true);
     try {
@@ -391,10 +398,11 @@ export default function DashboardClient({
         spaceId: editInventoryForm.category === 'Reposición' ? undefined : editInventoryForm.spaceId,
         name: editInventoryForm.name,
         currentStock: parseInt(editInventoryForm.currentStock),
-        minStock: parseInt(editInventoryForm.minStock),
+        minStock: finalMinStock,
         unit: editInventoryForm.unit,
         category: editInventoryForm.category,
-        subCategory: isKitchen ? editInventoryForm.subCategory : undefined
+        subCategory: isKitchen ? editInventoryForm.subCategory : undefined,
+        itemType: editInventoryForm.itemType
       });
       setIsEditInventoryOpen(false);
       setSelectedInventoryItemForEdit(null);
@@ -484,6 +492,18 @@ export default function DashboardClient({
     }
   };
 
+  // HOSPITALITY SEED HANDLER
+  const handleSeedKitchen = async (propertyId: string, spaceId: string) => {
+    setIsSubmitting(true);
+    try {
+      await seedKitchenEquipment({ propertyId, spaceId });
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   // Helper variables for selects
   const activePropertyIdForBooking = bookingForm.propertyId || properties[0]?.id || '';
   const activePropertyIdForFinance = financeForm.propertyId || properties[0]?.id || '';
@@ -496,6 +516,9 @@ export default function DashboardClient({
   // Check if current space selected is Kitchen
   const isKitchenSelectedInNewItem = spaces.find(s => s.id === inventoryForm.spaceId)?.name.toLowerCase() === 'cocina';
   const isKitchenSelectedInEditItem = spaces.find(s => s.id === editInventoryForm.spaceId)?.name.toLowerCase() === 'cocina';
+
+  // Filters for low stock ALERTS: strictly itemType = OPERATIVO
+  const lowStockAlerts = inventory.filter(i => (i.itemType || 'OPERATIVO') === 'OPERATIVO' && i.currentStock <= i.minStock);
 
   return (
     <div className="space-y-6">
@@ -783,10 +806,10 @@ export default function DashboardClient({
                 Alertas de Inventario
               </h3>
               <div className="space-y-3">
-                {inventory.filter(i => i.currentStock <= i.minStock).length === 0 ? (
+                {lowStockAlerts.length === 0 ? (
                   <p className="text-xs text-muted-foreground text-center py-2">Stock completo. No hay alertas.</p>
                 ) : (
-                  inventory.filter(i => i.currentStock <= i.minStock).map((item) => {
+                  lowStockAlerts.map((item) => {
                     const prop = properties.find(p => p.id === item.propertyId);
                     return (
                       <div 
@@ -918,12 +941,17 @@ export default function DashboardClient({
             {properties.length > 0 && (
               <button
                 onClick={() => {
-                  setInventoryForm(prev => ({
-                    ...prev,
+                  setInventoryForm({
                     propertyId: properties[0].id,
                     spaceId: spaces.filter(s => s.propertyId === properties[0].id)[0]?.id || '',
-                    category: 'General'
-                  }));
+                    name: '',
+                    currentStock: '',
+                    minStock: '',
+                    unit: 'unidades',
+                    category: 'General',
+                    subCategory: '',
+                    itemType: 'OPERATIVO'
+                  });
                   setIsNewInventoryOpen(true);
                 }}
                 className="flex items-center gap-1.5 bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-border px-3.5 py-2 rounded-xl text-xs font-semibold transition-all active:scale-95 h-10 animate-fade-in"
@@ -959,7 +987,7 @@ export default function DashboardClient({
                       className="inline-flex items-center gap-1 text-[11px] font-bold text-primary bg-primary/5 hover:bg-primary/10 border border-primary/20 px-3 py-1.5 rounded-xl transition-all"
                     >
                       <FolderPlus className="w-3.5 h-3.5" />
-                      <span>+ Añadir Ambiente</span>
+                      <span>+ Ambiente</span>
                     </button>
                   </div>
 
@@ -1006,7 +1034,26 @@ export default function DashboardClient({
                           </div>
 
                           {/* Space items list */}
-                          {isKitchen ? (
+                          {isKitchen && spaceItems.length === 0 ? (
+                            /* Premium Hospitality Seeding Banner for Empty Kitchens */
+                            <div className="p-5 border border-dashed border-primary/30 rounded-xl bg-primary/5 text-center space-y-4 py-6 animate-fade-in">
+                              <Sparkles className="w-8 h-8 text-primary mx-auto" />
+                              <div className="space-y-1">
+                                <h5 className="text-xs font-extrabold text-foreground">Ambiente Cocina sin Equipamiento</h5>
+                                <p className="text-[10px] text-muted-foreground max-w-xs mx-auto leading-relaxed">
+                                  ¿Deseas auto-cargar la vajilla, cubertería, electrodomésticos y consumibles recomendados para un estándar de 5 estrellas en Airbnb?
+                                </p>
+                              </div>
+                              <button
+                                type="button"
+                                disabled={isSubmitting}
+                                onClick={() => handleSeedKitchen(prop.id, space.id)}
+                                className="inline-flex items-center gap-1.5 bg-primary text-primary-foreground text-xs font-bold px-4 py-2.5 rounded-xl hover:bg-primary/95 transition-all disabled:opacity-50"
+                              >
+                                Cargar Equipamiento Estándar
+                              </button>
+                            </div>
+                          ) : isKitchen ? (
                             /* Advanced accordion group layout for Kitchen items */
                             <div className="space-y-2">
                               {[
@@ -1065,7 +1112,8 @@ export default function DashboardClient({
                                                   minStock: it.minStock.toString(),
                                                   unit: it.unit,
                                                   category: it.category,
-                                                  subCategory: it.subCategory || ''
+                                                  subCategory: it.subCategory || '',
+                                                  itemType: it.itemType || 'OPERATIVO'
                                                 });
                                                 setIsEditInventoryOpen(true);
                                               }}
@@ -1105,7 +1153,8 @@ export default function DashboardClient({
                                         minStock: it.minStock.toString(),
                                         unit: it.unit,
                                         category: it.category,
-                                        subCategory: it.subCategory || ''
+                                        subCategory: it.subCategory || '',
+                                        itemType: it.itemType || 'OPERATIVO'
                                       });
                                       setIsEditInventoryOpen(true);
                                     }}
@@ -1154,7 +1203,8 @@ export default function DashboardClient({
                                   minStock: it.minStock.toString(),
                                   unit: it.unit,
                                   category: it.category,
-                                  subCategory: it.subCategory || ''
+                                  subCategory: it.subCategory || '',
+                                  itemType: it.itemType || 'OPERATIVO'
                                 });
                                 setIsEditInventoryOpen(true);
                               }}
@@ -1522,28 +1572,51 @@ export default function DashboardClient({
               </div>
             </div>
 
-            {inventoryForm.category !== 'Reposición' && (
+            <div className="grid grid-cols-2 gap-4">
+              {/* Type of inventory: Operational vs Active Assets */}
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-muted-foreground uppercase">Ambiente / Habitación</label>
+                <label className="text-xs font-bold text-muted-foreground uppercase">Tipo Inventario</label>
                 <select
-                  value={inventoryForm.spaceId}
-                  onChange={(e) => setInventoryForm({ ...inventoryForm, spaceId: e.target.value })}
-                  className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  value={inventoryForm.itemType}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setInventoryForm({
+                      ...inventoryForm,
+                      itemType: val,
+                      minStock: val === 'ACTIVO' ? '0' : inventoryForm.minStock
+                    });
+                  }}
+                  className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring font-semibold text-foreground"
                   style={{ minHeight: '44px' }}
                 >
-                  {spacesForSelectedPropertyInNewItem.map(s => (
-                    <option key={s.id} value={s.id}>{s.name}</option>
-                  ))}
+                  <option value="OPERATIVO">Operativo (Con Alerta)</option>
+                  <option value="ACTIVO">Activo Fijo (Sin Alerta)</option>
                 </select>
               </div>
-            )}
+
+              {inventoryForm.category !== 'Reposición' && (
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-muted-foreground uppercase">Ambiente</label>
+                  <select
+                    value={inventoryForm.spaceId}
+                    onChange={(e) => setInventoryForm({ ...inventoryForm, spaceId: e.target.value })}
+                    className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                    style={{ minHeight: '44px' }}
+                  >
+                    {spacesForSelectedPropertyInNewItem.map(s => (
+                      <option key={s.id} value={s.id}>{s.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-muted-foreground uppercase">Nombre del Insumo</label>
+              <label className="text-xs font-bold text-muted-foreground uppercase">Nombre del Insumo / Activo</label>
               <input
                 type="text"
                 required
-                placeholder="Ej. Juego de sábanas matrimoniales, Plato trinchador"
+                placeholder={inventoryForm.itemType === 'ACTIVO' ? "Ej. Aire Acondicionado Split, Cama Matrimonial" : "Ej. Juego de sábanas, Champú"}
                 value={inventoryForm.name}
                 onChange={(e) => setInventoryForm({ ...inventoryForm, name: e.target.value })}
                 className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
@@ -1553,26 +1626,28 @@ export default function DashboardClient({
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-muted-foreground uppercase">Stock Actual</label>
+                <label className="text-xs font-bold text-muted-foreground uppercase">Cantidad Actual</label>
                 <input
                   type="number"
                   required
-                  placeholder="20"
+                  placeholder="1"
                   value={inventoryForm.currentStock}
                   onChange={(e) => setInventoryForm({ ...inventoryForm, currentStock: e.target.value })}
                   className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                   style={{ minHeight: '44px' }}
                 />
               </div>
+              
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-muted-foreground uppercase">Stock Mínimo (Alerta)</label>
                 <input
                   type="number"
                   required
-                  placeholder="10"
-                  value={inventoryForm.minStock}
+                  disabled={inventoryForm.itemType === 'ACTIVO'}
+                  placeholder={inventoryForm.itemType === 'ACTIVO' ? 'N/A (Activo Fijo)' : '10'}
+                  value={inventoryForm.itemType === 'ACTIVO' ? '0' : inventoryForm.minStock}
                   onChange={(e) => setInventoryForm({ ...inventoryForm, minStock: e.target.value })}
-                  className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50 disabled:bg-muted/30"
                   style={{ minHeight: '44px' }}
                 />
               </div>
@@ -1588,6 +1663,7 @@ export default function DashboardClient({
                   style={{ minHeight: '44px' }}
                 >
                   <option value="unidades">Unidades</option>
+                  <option value="unidad">Unidad (Individual)</option>
                   <option value="cápsulas">Cápsulas</option>
                   <option value="paquetes">Paquetes</option>
                   <option value="rollos">Rollos</option>
@@ -1622,7 +1698,7 @@ export default function DashboardClient({
               disabled={isSubmitting}
               className="w-full bg-primary text-primary-foreground font-semibold py-3 rounded-xl hover:bg-primary/95 transition-colors disabled:opacity-50 h-12 mt-4"
             >
-              {isSubmitting ? 'Guardando...' : 'Agregar Insumo'}
+              {isSubmitting ? 'Guardando...' : 'Agregar al Sistema'}
             </button>
           </form>
         )}
@@ -1635,7 +1711,7 @@ export default function DashboardClient({
           setIsEditInventoryOpen(false);
           setSelectedInventoryItemForEdit(null);
         }}
-        title="Modificar Insumo de Inventario"
+        title="Modificar Insumo / Activo"
       >
         {selectedInventoryItemForEdit && (
           <form onSubmit={handleEditInventorySubmit} className="space-y-4">
@@ -1683,24 +1759,46 @@ export default function DashboardClient({
               </div>
             </div>
 
-            {editInventoryForm.category !== 'Reposición' && (
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-muted-foreground uppercase">Ambiente / Habitación</label>
+                <label className="text-xs font-bold text-muted-foreground uppercase">Tipo Inventario</label>
                 <select
-                  value={editInventoryForm.spaceId}
-                  onChange={(e) => setEditInventoryForm({ ...editInventoryForm, spaceId: e.target.value })}
-                  className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  value={editInventoryForm.itemType}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setEditInventoryForm({
+                      ...editInventoryForm,
+                      itemType: val,
+                      minStock: val === 'ACTIVO' ? '0' : editInventoryForm.minStock
+                    });
+                  }}
+                  className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring font-semibold text-foreground"
                   style={{ minHeight: '44px' }}
                 >
-                  {spacesForSelectedPropertyInEditItem.map(s => (
-                    <option key={s.id} value={s.id}>{s.name}</option>
-                  ))}
+                  <option value="OPERATIVO">Operativo (Con Alerta)</option>
+                  <option value="ACTIVO">Activo Fijo (Sin Alerta)</option>
                 </select>
               </div>
-            )}
+
+              {editInventoryForm.category !== 'Reposición' && (
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-muted-foreground uppercase">Ambiente</label>
+                  <select
+                    value={editInventoryForm.spaceId}
+                    onChange={(e) => setEditInventoryForm({ ...editInventoryForm, spaceId: e.target.value })}
+                    className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                    style={{ minHeight: '44px' }}
+                  >
+                    {spacesForSelectedPropertyInEditItem.map(s => (
+                      <option key={s.id} value={s.id}>{s.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-muted-foreground uppercase">Nombre del Insumo</label>
+              <label className="text-xs font-bold text-muted-foreground uppercase">Nombre del Insumo / Activo</label>
               <input
                 type="text"
                 required
@@ -1713,7 +1811,7 @@ export default function DashboardClient({
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-muted-foreground uppercase">Stock Actual</label>
+                <label className="text-xs font-bold text-muted-foreground uppercase">Cantidad Actual</label>
                 <input
                   type="number"
                   required
@@ -1723,14 +1821,17 @@ export default function DashboardClient({
                   style={{ minHeight: '44px' }}
                 />
               </div>
+              
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-muted-foreground uppercase">Stock Mínimo (Alerta)</label>
                 <input
                   type="number"
                   required
-                  value={editInventoryForm.minStock}
+                  disabled={editInventoryForm.itemType === 'ACTIVO'}
+                  placeholder={editInventoryForm.itemType === 'ACTIVO' ? 'N/A (Activo Fijo)' : '10'}
+                  value={editInventoryForm.itemType === 'ACTIVO' ? '0' : editInventoryForm.minStock}
                   onChange={(e) => setEditInventoryForm({ ...editInventoryForm, minStock: e.target.value })}
-                  className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50 disabled:bg-muted/30"
                   style={{ minHeight: '44px' }}
                 />
               </div>
@@ -1746,6 +1847,7 @@ export default function DashboardClient({
                   style={{ minHeight: '44px' }}
                 >
                   <option value="unidades">Unidades</option>
+                  <option value="unidad">Unidad (Individual)</option>
                   <option value="cápsulas">Cápsulas</option>
                   <option value="paquetes">Paquetes</option>
                   <option value="rollos">Rollos</option>
@@ -2160,7 +2262,7 @@ export default function DashboardClient({
               </button>
             </div>
 
-            {selectedInventoryItem.currentStock <= selectedInventoryItem.minStock && (
+            {(selectedInventoryItem.itemType || 'OPERATIVO') === 'OPERATIVO' && selectedInventoryItem.currentStock <= selectedInventoryItem.minStock && (
               <div className="p-3 border border-amber-500/20 bg-amber-500/5 text-amber-700 dark:text-amber-400 text-xs rounded-xl flex items-center justify-center gap-2 font-medium">
                 <AlertTriangle className="w-4 h-4 shrink-0" />
                 <span>Nivel crítico. Requiere reabastecimiento mínimo de {selectedInventoryItem.minStock} {selectedInventoryItem.unit}.</span>
@@ -2193,12 +2295,13 @@ interface InventoryItemRowProps {
 }
 
 function InventoryItemRow({ item, onAdjust, onEdit, onDelete, onOpenAdjust }: InventoryItemRowProps) {
-  const isLow = item.currentStock <= item.minStock;
+  const isOperational = (item.itemType || 'OPERATIVO') === 'OPERATIVO';
+  const isLow = isOperational && item.currentStock <= item.minStock;
   
   return (
     <div className="flex items-center justify-between py-3 hover:bg-muted/30 transition-colors px-2 rounded-lg">
       <div className="min-w-0 pr-4 flex-1">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <span 
             onClick={() => onOpenAdjust(item)}
             className={cn(
@@ -2208,12 +2311,20 @@ function InventoryItemRow({ item, onAdjust, onEdit, onDelete, onOpenAdjust }: In
           >
             {item.name}
           </span>
+          
+          {/* Badge for assets */}
+          {!isOperational && (
+            <span className="text-[9px] bg-blue-500/10 text-blue-600 dark:bg-blue-950/40 dark:text-blue-300 px-1.5 py-0.5 rounded font-bold uppercase shrink-0">
+              Activo
+            </span>
+          )}
+          
           {isLow && (
             <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" title="Bajo stock" />
           )}
         </div>
         <span className="text-[10px] text-muted-foreground block">
-          Mínimo: {item.minStock} {item.unit}
+          {isOperational ? `Mínimo: ${item.minStock} ${item.unit}` : 'Equipamiento fijo'}
         </span>
       </div>
 
@@ -2253,7 +2364,7 @@ function InventoryItemRow({ item, onAdjust, onEdit, onDelete, onOpenAdjust }: In
           <button
             onClick={() => onEdit(item)}
             className="p-1.5 hover:bg-muted rounded-md text-muted-foreground hover:text-foreground transition-colors"
-            title="Editar insumo"
+            title="Editar"
             style={{ minWidth: '32px', minHeight: '32px' }}
           >
             <Pencil className="w-3.5 h-3.5" />
@@ -2261,7 +2372,7 @@ function InventoryItemRow({ item, onAdjust, onEdit, onDelete, onOpenAdjust }: In
           <button
             onClick={() => onDelete(item.id, item.name)}
             className="p-1.5 hover:bg-rose-50 rounded-md text-muted-foreground hover:text-rose-600 transition-colors"
-            title="Eliminar insumo"
+            title="Eliminar"
             style={{ minWidth: '32px', minHeight: '32px' }}
           >
             <Trash2 className="w-3.5 h-3.5" />

@@ -31,7 +31,8 @@ export interface InventoryItem {
   minStock: number;
   unit: string;
   category: 'General' | 'Reposición' | string;
-  subCategory: string | null; //vajilla, utensilios, electrodomesticos, consumibles
+  subCategory: string | null; // vajilla, utensilios, electrodomesticos, consumibles
+  itemType: 'OPERATIVO' | 'ACTIVO' | string;
 }
 
 export interface FinancialRecord {
@@ -171,6 +172,7 @@ export const INITIAL_INVENTORY: InventoryItem[] = [
     unit: 'cápsulas',
     category: 'General',
     subCategory: 'Consumibles',
+    itemType: 'OPERATIVO',
   },
   {
     id: 'inv-2',
@@ -182,6 +184,7 @@ export const INITIAL_INVENTORY: InventoryItem[] = [
     unit: 'unidades',
     category: 'General',
     subCategory: null,
+    itemType: 'OPERATIVO',
   },
   {
     id: 'inv-3',
@@ -193,6 +196,7 @@ export const INITIAL_INVENTORY: InventoryItem[] = [
     unit: 'frascos',
     category: 'General',
     subCategory: null,
+    itemType: 'OPERATIVO',
   },
   {
     id: 'inv-4',
@@ -204,6 +208,7 @@ export const INITIAL_INVENTORY: InventoryItem[] = [
     unit: 'cápsulas',
     category: 'General',
     subCategory: 'Consumibles',
+    itemType: 'OPERATIVO',
   },
   {
     id: 'inv-5',
@@ -215,6 +220,7 @@ export const INITIAL_INVENTORY: InventoryItem[] = [
     unit: 'rollos',
     category: 'General',
     subCategory: null,
+    itemType: 'OPERATIVO',
   },
   {
     id: 'inv-6',
@@ -226,6 +232,7 @@ export const INITIAL_INVENTORY: InventoryItem[] = [
     unit: 'kits',
     category: 'Reposición',
     subCategory: null,
+    itemType: 'OPERATIVO',
   },
   {
     id: 'inv-7',
@@ -237,6 +244,7 @@ export const INITIAL_INVENTORY: InventoryItem[] = [
     unit: 'unidades',
     category: 'General',
     subCategory: 'Vajilla y Cubertería',
+    itemType: 'OPERATIVO',
   },
   {
     id: 'inv-8',
@@ -248,6 +256,7 @@ export const INITIAL_INVENTORY: InventoryItem[] = [
     unit: 'unidades',
     category: 'General',
     subCategory: 'Utensilios y Menaje',
+    itemType: 'OPERATIVO',
   },
   {
     id: 'inv-9',
@@ -259,6 +268,44 @@ export const INITIAL_INVENTORY: InventoryItem[] = [
     unit: 'unidad',
     category: 'General',
     subCategory: 'Electrodomésticos',
+    itemType: 'ACTIVO', // Tostadora is a fixed asset
+  },
+  // Active Assets (Equipamiento)
+  {
+    id: 'inv-10',
+    propertyId: 'prop-1',
+    spaceId: 'space-1-1', // Habitación 1
+    name: 'Aire Acondicionado Split',
+    currentStock: 1,
+    minStock: 1,
+    unit: 'unidad',
+    category: 'General',
+    subCategory: null,
+    itemType: 'ACTIVO',
+  },
+  {
+    id: 'inv-11',
+    propertyId: 'prop-1',
+    spaceId: 'space-1-1', // Habitación 1
+    name: 'Cama Matrimonial King',
+    currentStock: 1,
+    minStock: 1,
+    unit: 'unidad',
+    category: 'General',
+    subCategory: null,
+    itemType: 'ACTIVO',
+  },
+  {
+    id: 'inv-12',
+    propertyId: 'prop-1',
+    spaceId: 'space-1-4', // Living
+    name: 'Televisión Smart TV 55"',
+    currentStock: 1,
+    minStock: 1,
+    unit: 'unidad',
+    category: 'General',
+    subCategory: null,
+    itemType: 'ACTIVO',
   }
 ];
 
