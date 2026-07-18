@@ -70,6 +70,18 @@ export const db = {
         return prisma.property.findUnique(args as any);
       }
       return mockDb.properties.find(p => p.id === args.where.id) || null;
+    },
+    create: async (args: { data: { name: string; address: string; colorCode: string } }) => {
+      await delay();
+      if (hasDbUrl && prisma) {
+        return prisma.property.create(args as any);
+      }
+      const newProperty: mock.Property = {
+        id: `prop-${Math.random().toString(36).substring(2, 9)}`,
+        ...args.data,
+      };
+      mockDb.properties.push(newProperty);
+      return newProperty;
     }
   },
 
@@ -162,6 +174,18 @@ export const db = {
       };
       mockDb.inventory[idx] = updated;
       return updated;
+    },
+    create: async (args: { data: Omit<mock.InventoryItem, 'id'> }) => {
+      await delay();
+      if (hasDbUrl && prisma) {
+        return prisma.inventoryItem.create(args as any);
+      }
+      const newInventory: mock.InventoryItem = {
+        id: `inv-${Math.random().toString(36).substring(2, 9)}`,
+        ...args.data,
+      };
+      mockDb.inventory.push(newInventory);
+      return newInventory;
     }
   },
 

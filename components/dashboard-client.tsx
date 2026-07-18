@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { 
   Building2, Plus, ArrowUpRight, ArrowDownRight, 
   CheckCircle2, Clock, AlertTriangle, PackagePlus, 
-  DollarSign, ClipboardList, CalendarPlus, ShieldAlert
+  DollarSign, ClipboardList, CalendarPlus, ShieldAlert, Sparkles
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Drawer from './drawer';
@@ -13,7 +13,9 @@ import {
   recordFinanceTransaction, 
   createOrUpdateBooking, 
   updateTaskStatus, 
-  createTask 
+  createTask,
+  createProperty,
+  createInventoryItem
 } from '@/app/actions/pms-actions';
 
 interface DashboardClientProps {
@@ -41,13 +43,21 @@ export default function DashboardClient({
   const [activeTab, setActiveTab] = useState<'summary' | 'tasks' | 'inventory' | 'finances'>('summary');
   
   // Drawer visibility states
+  const [isPropertyOpen, setIsPropertyOpen] = useState(false);
   const [isBookingOpen, setIsBookingOpen] = useState(false);
   const [isFinanceOpen, setIsFinanceOpen] = useState(false);
   const [isTaskOpen, setIsTaskOpen] = useState(false);
   const [isInventoryOpen, setIsInventoryOpen] = useState(false);
+  const [isNewInventoryOpen, setIsNewInventoryOpen] = useState(false);
   const [selectedInventoryItem, setSelectedInventoryItem] = useState<any>(null);
 
   // Form states
+  const [propertyForm, setPropertyForm] = useState({
+    name: '',
+    address: '',
+    colorCode: '#10b981', // Default emerald
+  });
+
   const [bookingForm, setBookingForm] = useState({
     propertyId: properties[0]?.id || '',
     guestName: '',
@@ -73,6 +83,14 @@ export default function DashboardClient({
     dueDate: new Date().toISOString().split('T')[0],
     type: 'CLEANING',
     status: 'PENDING'
+  });
+
+  const [inventoryForm, setInventoryForm] = useState({
+    propertyId: properties[0]?.id || '',
+    name: '',
+    currentStock: '',
+    minStock: '',
+    unit: 'unidades',
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -108,13 +126,45 @@ export default function DashboardClient({
   };
 
   // HANDLERS
+  const handlePropertySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!propertyForm.name || !propertyForm.address) return;
+    setIsSubmitting(true);
+    try {
+      await createProperty({
+        name: propertyForm.name,
+        address: propertyForm.address,
+        colorCode: propertyForm.colorCode
+      });
+      setIsPropertyOpen(false);
+      setPropertyForm({
+        name: '',
+        address: '',
+        colorCode: '#10b981'
+      });
+      
+      // Update form default selected property if it was empty
+      const updatedProps = [...properties];
+      const newPropId = updatedProps.length > 0 ? updatedProps[0].id : '';
+      setBookingForm(prev => prev.propertyId ? prev : { ...prev, propertyId: newPropId });
+      setFinanceForm(prev => prev.propertyId ? prev : { ...prev, propertyId: newPropId });
+      setTaskForm(prev => prev.propertyId ? prev : { ...prev, propertyId: newPropId });
+      setInventoryForm(prev => prev.propertyId ? prev : { ...prev, propertyId: newPropId });
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleBookingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!bookingForm.guestName || !bookingForm.checkIn || !bookingForm.checkOut || !bookingForm.totalRevenue) return;
+    const activePropId = bookingForm.propertyId || properties[0]?.id;
+    if (!activePropId || !bookingForm.guestName || !bookingForm.checkIn || !bookingForm.checkOut || !bookingForm.totalRevenue) return;
     setIsSubmitting(true);
     try {
       await createOrUpdateBooking({
-        propertyId: bookingForm.propertyId,
+        propertyId: activePropId,
         guestName: bookingForm.guestName,
         checkIn: bookingForm.checkIn,
         checkOut: bookingForm.checkOut,
@@ -141,11 +191,12 @@ export default function DashboardClient({
 
   const handleFinanceSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!financeForm.amount || !financeForm.category) return;
+    const activePropId = financeForm.propertyId || properties[0]?.id;
+    if (!activePropId || !financeForm.amount || !financeForm.category) return;
     setIsSubmitting(true);
     try {
       await recordFinanceTransaction({
-        propertyId: financeForm.propertyId,
+        propertyId: activePropId,
         type: financeForm.type,
         category: financeForm.category,
         amount: parseFloat(financeForm.amount),
@@ -168,11 +219,12 @@ export default function DashboardClient({
 
   const handleTaskSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!taskForm.title || !taskForm.dueDate) return;
+    const activePropId = taskForm.propertyId || properties[0]?.id;
+    if (!activePropId || !taskForm.title || !taskForm.dueDate) return;
     setIsSubmitting(true);
     try {
       await createTask({
-        propertyId: taskForm.propertyId,
+        propertyId: activePropId,
         title: taskForm.title,
         description: taskForm.description,
         dueDate: taskForm.dueDate,
@@ -187,6 +239,34 @@ export default function DashboardClient({
         dueDate: new Date().toISOString().split('T')[0],
         type: 'CLEANING',
         status: 'PENDING'
+      });
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleInventorySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const activePropId = inventoryForm.propertyId || properties[0]?.id;
+    if (!activePropId || !inventoryForm.name || !inventoryForm.currentStock || !inventoryForm.minStock) return;
+    setIsSubmitting(true);
+    try {
+      await createInventoryItem({
+        propertyId: activePropId,
+        name: inventoryForm.name,
+        currentStock: parseInt(inventoryForm.currentStock),
+        minStock: parseInt(inventoryForm.minStock),
+        unit: inventoryForm.unit
+      });
+      setIsNewInventoryOpen(false);
+      setInventoryForm({
+        propertyId: properties[0]?.id || '',
+        name: '',
+        currentStock: '',
+        minStock: '',
+        unit: 'unidades'
       });
     } catch (err) {
       console.error(err);
@@ -217,6 +297,12 @@ export default function DashboardClient({
     }
   };
 
+  // Ensure default selects are populated after properties load
+  const activePropertyIdForBooking = bookingForm.propertyId || properties[0]?.id || '';
+  const activePropertyIdForFinance = financeForm.propertyId || properties[0]?.id || '';
+  const activePropertyIdForTask = taskForm.propertyId || properties[0]?.id || '';
+  const activePropertyIdForInventory = inventoryForm.propertyId || properties[0]?.id || '';
+
   return (
     <div className="space-y-6">
       {/* Header and Quick Buttons */}
@@ -228,7 +314,7 @@ export default function DashboardClient({
         <div className="grid grid-cols-3 md:flex gap-2">
           <button
             onClick={() => setIsBookingOpen(true)}
-            className="flex flex-col md:flex-row items-center justify-center gap-1.5 md:gap-2 px-3 py-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl text-xs md:text-sm font-semibold transition-all active:scale-95 h-11"
+            className="flex flex-col md:flex-row items-center justify-center gap-1.5 md:gap-2 px-3 py-2 bg-primary text-primary-foreground hover:bg-primary/95 rounded-xl text-xs md:text-sm font-semibold transition-all active:scale-95 h-11"
           >
             <CalendarPlus className="w-4 h-4" />
             <span>Reserva</span>
@@ -250,7 +336,7 @@ export default function DashboardClient({
         </div>
       </div>
 
-      {/* Navigation Sub-Tabs for Mobile Content Organization */}
+      {/* Navigation Sub-Tabs */}
       <div className="flex border-b border-border space-x-4">
         {[
           { id: 'summary', name: 'Inicio' },
@@ -279,45 +365,77 @@ export default function DashboardClient({
           {/* Main Column: Properties */}
           <div className="lg:col-span-2 space-y-6">
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold flex items-center gap-2">
-                <Building2 className="w-4 h-4 text-muted-foreground" />
-                Propiedades
-              </h3>
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                  <Building2 className="w-4 h-4 text-muted-foreground" />
+                  Propiedades
+                </h3>
+                {properties.length < 3 ? (
+                  <button
+                    onClick={() => setIsPropertyOpen(true)}
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:underline h-10 px-3 hover:bg-muted/50 rounded-xl"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Registrar Propiedad</span>
+                  </button>
+                ) : (
+                  <span className="text-[10px] bg-muted text-muted-foreground px-2.5 py-1 rounded-lg font-semibold border border-border">
+                    Límite de 3 Propiedades
+                  </span>
+                )}
+              </div>
+              
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {properties.map((prop) => {
-                  const status = getPropertyStatus(prop.id, prop.bookings);
-                  return (
-                    <div 
-                      key={prop.id} 
-                      className="group relative flex flex-col bg-card border border-border rounded-2xl p-5 hover:shadow-md transition-all duration-300"
-                    >
-                      {/* Color indicator stripe */}
-                      <div 
-                        className="absolute top-0 left-0 right-0 h-1.5 rounded-t-2xl"
-                        style={{ backgroundColor: prop.colorCode }}
-                      />
-                      <div className="flex-1 mt-2">
-                        <h4 className="font-bold text-base truncate">{prop.name}</h4>
-                        <p className="text-xs text-muted-foreground truncate mb-4">{prop.address}</p>
-                      </div>
-                      
-                      {/* Dynamic status badge */}
-                      <div className="flex flex-col gap-2 pt-3 border-t border-border/60">
-                        <span className={cn(
-                          "inline-flex items-center justify-between text-xs font-semibold px-2.5 py-1 rounded-lg border",
-                          status.color
-                        )}>
-                          <span>{status.label}</span>
-                        </span>
-                        {status.guest && (
-                          <div className="text-[11px] text-muted-foreground">
-                            Huésped: <span className="font-semibold text-foreground">{status.guest}</span>
-                          </div>
-                        )}
-                      </div>
+                {properties.length === 0 ? (
+                  <div className="md:col-span-3 bg-card border border-dashed border-border rounded-2xl p-8 text-center text-muted-foreground flex flex-col items-center justify-center gap-3">
+                    <Building2 className="w-8 h-8 text-muted-foreground/50" />
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">No hay propiedades registradas</p>
+                      <p className="text-xs mt-1">Registra tu primer departamento para comenzar a operarlo.</p>
                     </div>
-                  );
-                })}
+                    <button
+                      onClick={() => setIsPropertyOpen(true)}
+                      className="mt-2 bg-primary text-primary-foreground font-semibold px-4 py-2 rounded-xl text-xs hover:bg-primary/95 transition-all"
+                    >
+                      Registrar Propiedad
+                    </button>
+                  </div>
+                ) : (
+                  properties.map((prop) => {
+                    const status = getPropertyStatus(prop.id, prop.bookings);
+                    return (
+                      <div 
+                        key={prop.id} 
+                        className="group relative flex flex-col bg-card border border-border rounded-2xl p-5 hover:shadow-md transition-all duration-300"
+                      >
+                        {/* Color indicator stripe */}
+                        <div 
+                          className="absolute top-0 left-0 right-0 h-1.5 rounded-t-2xl"
+                          style={{ backgroundColor: prop.colorCode }}
+                        />
+                        <div className="flex-1 mt-2">
+                          <h4 className="font-bold text-base truncate">{prop.name}</h4>
+                          <p className="text-xs text-muted-foreground truncate mb-4">{prop.address}</p>
+                        </div>
+                        
+                        {/* Dynamic status badge */}
+                        <div className="flex flex-col gap-2 pt-3 border-t border-border/60">
+                          <span className={cn(
+                            "inline-flex items-center justify-between text-xs font-semibold px-2.5 py-1 rounded-lg border",
+                            status.color
+                          )}>
+                            <span>{status.label}</span>
+                          </span>
+                          {status.guest && (
+                            <div className="text-[11px] text-muted-foreground">
+                              Huésped: <span className="font-semibold text-foreground">{status.guest}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
               </div>
             </div>
 
@@ -573,7 +691,15 @@ export default function DashboardClient({
         <div className="space-y-4">
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-bold">Inventario de Propiedades</h3>
-            <span className="text-xs text-muted-foreground">Toca un elemento para ajustar stock</span>
+            {properties.length > 0 && (
+              <button
+                onClick={() => setIsNewInventoryOpen(true)}
+                className="flex items-center gap-1.5 bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-border px-3.5 py-2 rounded-xl text-xs font-semibold transition-all active:scale-95 h-10"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Nuevo Insumo</span>
+              </button>
+            )}
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {properties.map((prop) => {
@@ -700,111 +826,296 @@ export default function DashboardClient({
 
       {/* DRAWERS (SLIDE-UP MODALS) */}
 
-      {/* 1. Booking Drawer */}
+      {/* 0. Property Registration Drawer */}
       <Drawer
-        isOpen={isBookingOpen}
-        onClose={() => setIsBookingOpen(false)}
-        title="Crear Nueva Reserva"
+        isOpen={isPropertyOpen}
+        onClose={() => setIsPropertyOpen(false)}
+        title="Registrar Nueva Propiedad"
       >
-        <form onSubmit={handleBookingSubmit} className="space-y-4">
+        <form onSubmit={handlePropertySubmit} className="space-y-4">
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-muted-foreground uppercase">Propiedad</label>
-            <select
-              value={bookingForm.propertyId}
-              onChange={(e) => setBookingForm({ ...bookingForm, propertyId: e.target.value })}
-              className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-              style={{ minHeight: '44px' }}
-            >
-              {properties.map(p => (
-                <option key={p.id} value={p.id}>{p.name}</option>
-              ))}
-            </select>
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-muted-foreground uppercase">Nombre del Huésped</label>
+            <label className="text-xs font-bold text-muted-foreground uppercase">Nombre de la Propiedad</label>
             <input
               type="text"
               required
-              placeholder="Ej. Juan Pérez"
-              value={bookingForm.guestName}
-              onChange={(e) => setBookingForm({ ...bookingForm, guestName: e.target.value })}
+              placeholder="Ej. Loft La Condesa"
+              value={propertyForm.name}
+              onChange={(e) => setPropertyForm({ ...propertyForm, name: e.target.value })}
               className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               style={{ minHeight: '44px' }}
             />
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-muted-foreground uppercase">Check-In</label>
-              <input
-                type="date"
-                required
-                value={bookingForm.checkIn}
-                onChange={(e) => setBookingForm({ ...bookingForm, checkIn: e.target.value })}
-                className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                style={{ minHeight: '44px' }}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-muted-foreground uppercase">Check-Out</label>
-              <input
-                type="date"
-                required
-                value={bookingForm.checkOut}
-                onChange={(e) => setBookingForm({ ...bookingForm, checkOut: e.target.value })}
-                className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                style={{ minHeight: '44px' }}
-              />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-muted-foreground uppercase">Ingresos ($ USD)</label>
-              <input
-                type="number"
-                step="0.01"
-                required
-                placeholder="0.00"
-                value={bookingForm.totalRevenue}
-                onChange={(e) => setBookingForm({ ...bookingForm, totalRevenue: e.target.value })}
-                className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                style={{ minHeight: '44px' }}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-muted-foreground uppercase">Plataforma</label>
-              <select
-                value={bookingForm.platform}
-                onChange={(e) => setBookingForm({ ...bookingForm, platform: e.target.value })}
-                className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                style={{ minHeight: '44px' }}
-              >
-                <option value="Airbnb">Airbnb</option>
-                <option value="Booking.com">Booking.com</option>
-                <option value="Directo">Directo</option>
-              </select>
-            </div>
-          </div>
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-muted-foreground uppercase">Estado</label>
-            <select
-              value={bookingForm.status}
-              onChange={(e) => setBookingForm({ ...bookingForm, status: e.target.value })}
+            <label className="text-xs font-bold text-muted-foreground uppercase">Dirección</label>
+            <input
+              type="text"
+              required
+              placeholder="Ej. Av. Mazatlán 142, CDMX"
+              value={propertyForm.address}
+              onChange={(e) => setPropertyForm({ ...propertyForm, address: e.target.value })}
               className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               style={{ minHeight: '44px' }}
-            >
-              <option value="CONFIRMED">Confirmada</option>
-              <option value="PENDING">Pendiente</option>
-              <option value="CANCELLED">Cancelada</option>
-            </select>
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-muted-foreground uppercase">Tema de Color</label>
+            <div className="grid grid-cols-5 gap-2 pt-1">
+              {[
+                { name: 'Esmeralda', hex: '#10b981' },
+                { name: 'Índigo', hex: '#6366f1' },
+                { name: 'Cielo', hex: '#0ea5e9' },
+                { name: 'Rosa', hex: '#f43f5e' },
+                { name: 'Ámbar', hex: '#f59e0b' }
+              ].map((color) => (
+                <button
+                  key={color.hex}
+                  type="button"
+                  onClick={() => setPropertyForm({ ...propertyForm, colorCode: color.hex })}
+                  className={cn(
+                    "w-10 h-10 rounded-xl flex items-center justify-center border-2 transition-all active:scale-95",
+                    propertyForm.colorCode === color.hex 
+                      ? "border-primary scale-110 shadow-sm" 
+                      : "border-transparent hover:border-muted-foreground/30"
+                  )}
+                  style={{ backgroundColor: color.hex }}
+                  title={color.name}
+                />
+              ))}
+            </div>
           </div>
           <button
             type="submit"
             disabled={isSubmitting}
             className="w-full bg-primary text-primary-foreground font-semibold py-3 rounded-xl hover:bg-primary/95 transition-colors disabled:opacity-50 h-12 mt-4"
           >
-            {isSubmitting ? 'Guardando...' : 'Crear Reserva'}
+            {isSubmitting ? 'Guardando...' : 'Registrar Propiedad'}
           </button>
         </form>
+      </Drawer>
+
+      {/* 0.5. New Inventory Item Drawer */}
+      <Drawer
+        isOpen={isNewInventoryOpen}
+        onClose={() => setIsNewInventoryOpen(false)}
+        title="Agregar Nuevo Insumo"
+      >
+        {properties.length === 0 ? (
+          <div className="space-y-4 text-center py-4">
+            <div className="p-4 border border-amber-500/20 bg-amber-500/5 text-amber-700 dark:text-amber-400 text-xs rounded-xl font-medium">
+              Por favor, primero registra una propiedad antes de agregar insumos al inventario.
+            </div>
+            <button
+              onClick={() => {
+                setIsNewInventoryOpen(false);
+                setIsPropertyOpen(true);
+              }}
+              className="w-full bg-primary text-primary-foreground font-semibold py-3 rounded-xl hover:bg-primary/95 transition-colors h-12"
+            >
+              Registrar Propiedad
+            </button>
+          </div>
+        ) : (
+          <form onSubmit={handleInventorySubmit} className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-muted-foreground uppercase">Propiedad</label>
+              <select
+                value={activePropertyIdForInventory}
+                onChange={(e) => setInventoryForm({ ...inventoryForm, propertyId: e.target.value })}
+                className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                style={{ minHeight: '44px' }}
+              >
+                {properties.map(p => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-muted-foreground uppercase">Nombre del Insumo</label>
+              <input
+                type="text"
+                required
+                placeholder="Ej. Cápsulas de Café"
+                value={inventoryForm.name}
+                onChange={(e) => setInventoryForm({ ...inventoryForm, name: e.target.value })}
+                className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                style={{ minHeight: '44px' }}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-muted-foreground uppercase">Stock Actual</label>
+                <input
+                  type="number"
+                  required
+                  placeholder="20"
+                  value={inventoryForm.currentStock}
+                  onChange={(e) => setInventoryForm({ ...inventoryForm, currentStock: e.target.value })}
+                  className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  style={{ minHeight: '44px' }}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-muted-foreground uppercase">Stock Mínimo (Alerta)</label>
+                <input
+                  type="number"
+                  required
+                  placeholder="10"
+                  value={inventoryForm.minStock}
+                  onChange={(e) => setInventoryForm({ ...inventoryForm, minStock: e.target.value })}
+                  className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  style={{ minHeight: '44px' }}
+                />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-muted-foreground uppercase">Unidad de Medida</label>
+              <select
+                value={inventoryForm.unit}
+                onChange={(e) => setInventoryForm({ ...inventoryForm, unit: e.target.value })}
+                className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                style={{ minHeight: '44px' }}
+              >
+                <option value="unidades">Unidades</option>
+                <option value="cápsulas">Cápsulas</option>
+                <option value="paquetes">Paquetes</option>
+                <option value="rollos">Rollos</option>
+                <option value="frascos">Frascos</option>
+                <option value="bolsas">Bolsas</option>
+              </select>
+            </div>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full bg-primary text-primary-foreground font-semibold py-3 rounded-xl hover:bg-primary/95 transition-colors disabled:opacity-50 h-12 mt-4"
+            >
+              {isSubmitting ? 'Guardando...' : 'Agregar Insumo'}
+            </button>
+          </form>
+        )}
+      </Drawer>
+
+      {/* 1. Booking Drawer */}
+      <Drawer
+        isOpen={isBookingOpen}
+        onClose={() => setIsBookingOpen(false)}
+        title="Crear Nueva Reserva"
+      >
+        {properties.length === 0 ? (
+          <div className="space-y-4 text-center py-4">
+            <div className="p-4 border border-amber-500/20 bg-amber-500/5 text-amber-700 dark:text-amber-400 text-xs rounded-xl font-medium">
+              Por favor, primero registra una propiedad en la pantalla principal antes de añadir reservas.
+            </div>
+            <button
+              onClick={() => {
+                setIsBookingOpen(false);
+                setIsPropertyOpen(true);
+              }}
+              className="w-full bg-primary text-primary-foreground font-semibold py-3 rounded-xl hover:bg-primary/95 transition-colors h-12"
+            >
+              Registrar Propiedad
+            </button>
+          </div>
+        ) : (
+          <form onSubmit={handleBookingSubmit} className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-muted-foreground uppercase">Propiedad</label>
+              <select
+                value={activePropertyIdForBooking}
+                onChange={(e) => setBookingForm({ ...bookingForm, propertyId: e.target.value })}
+                className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                style={{ minHeight: '44px' }}
+              >
+                {properties.map(p => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-muted-foreground uppercase">Nombre del Huésped</label>
+              <input
+                type="text"
+                required
+                placeholder="Ej. Juan Pérez"
+                value={bookingForm.guestName}
+                onChange={(e) => setBookingForm({ ...bookingForm, guestName: e.target.value })}
+                className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                style={{ minHeight: '44px' }}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-muted-foreground uppercase">Check-In</label>
+                <input
+                  type="date"
+                  required
+                  value={bookingForm.checkIn}
+                  onChange={(e) => setBookingForm({ ...bookingForm, checkIn: e.target.value })}
+                  className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  style={{ minHeight: '44px' }}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-muted-foreground uppercase">Check-Out</label>
+                <input
+                  type="date"
+                  required
+                  value={bookingForm.checkOut}
+                  onChange={(e) => setBookingForm({ ...bookingForm, checkOut: e.target.value })}
+                  className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  style={{ minHeight: '44px' }}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-muted-foreground uppercase">Ingresos ($ USD)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  required
+                  placeholder="0.00"
+                  value={bookingForm.totalRevenue}
+                  onChange={(e) => setBookingForm({ ...bookingForm, totalRevenue: e.target.value })}
+                  className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  style={{ minHeight: '44px' }}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-muted-foreground uppercase">Plataforma</label>
+                <select
+                  value={bookingForm.platform}
+                  onChange={(e) => setBookingForm({ ...bookingForm, platform: e.target.value })}
+                  className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  style={{ minHeight: '44px' }}
+                >
+                  <option value="Airbnb">Airbnb</option>
+                  <option value="Booking.com">Booking.com</option>
+                  <option value="Directo">Directo</option>
+                </select>
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-muted-foreground uppercase">Estado</label>
+              <select
+                value={bookingForm.status}
+                onChange={(e) => setBookingForm({ ...bookingForm, status: e.target.value })}
+                className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                style={{ minHeight: '44px' }}
+              >
+                <option value="CONFIRMED">Confirmada</option>
+                <option value="PENDING">Pendiente</option>
+                <option value="CANCELLED">Cancelada</option>
+              </select>
+            </div>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full bg-primary text-primary-foreground font-semibold py-3 rounded-xl hover:bg-primary/95 transition-colors disabled:opacity-50 h-12 mt-4"
+            >
+              {isSubmitting ? 'Guardando...' : 'Crear Reserva'}
+            </button>
+          </form>
+        )}
       </Drawer>
 
       {/* 2. Finance Drawer */}
@@ -813,92 +1124,109 @@ export default function DashboardClient({
         onClose={() => setIsFinanceOpen(false)}
         title="Registrar Ingreso u Gasto"
       >
-        <form onSubmit={handleFinanceSubmit} className="space-y-4">
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-muted-foreground uppercase">Propiedad</label>
-            <select
-              value={financeForm.propertyId}
-              onChange={(e) => setFinanceForm({ ...financeForm, propertyId: e.target.value })}
-              className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-              style={{ minHeight: '44px' }}
+        {properties.length === 0 ? (
+          <div className="space-y-4 text-center py-4">
+            <div className="p-4 border border-amber-500/20 bg-amber-500/5 text-amber-700 dark:text-amber-400 text-xs rounded-xl font-medium">
+              Por favor, primero registra una propiedad en la pantalla principal antes de añadir transacciones financieras.
+            </div>
+            <button
+              onClick={() => {
+                setIsFinanceOpen(false);
+                setIsPropertyOpen(true);
+              }}
+              className="w-full bg-primary text-primary-foreground font-semibold py-3 rounded-xl hover:bg-primary/95 transition-colors h-12"
             >
-              {properties.map(p => (
-                <option key={p.id} value={p.id}>{p.name}</option>
-              ))}
-            </select>
+              Registrar Propiedad
+            </button>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+        ) : (
+          <form onSubmit={handleFinanceSubmit} className="space-y-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-muted-foreground uppercase">Tipo</label>
+              <label className="text-xs font-bold text-muted-foreground uppercase">Propiedad</label>
               <select
-                value={financeForm.type}
-                onChange={(e) => setFinanceForm({ ...financeForm, type: e.target.value, category: e.target.value === 'INCOME' ? 'Reserva' : 'Limpieza' })}
+                value={activePropertyIdForFinance}
+                onChange={(e) => setFinanceForm({ ...financeForm, propertyId: e.target.value })}
                 className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 style={{ minHeight: '44px' }}
               >
-                <option value="EXPENSE">Gasto (-)</option>
-                <option value="INCOME">Ingreso (+)</option>
+                {properties.map(p => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
               </select>
             </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-muted-foreground uppercase">Categoría</label>
-              {financeForm.type === 'INCOME' ? (
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-muted-foreground uppercase">Tipo</label>
                 <select
-                  value={financeForm.category}
-                  onChange={(e) => setFinanceForm({ ...financeForm, category: e.target.value })}
+                  value={financeForm.type}
+                  onChange={(e) => setFinanceForm({ ...financeForm, type: e.target.value, category: e.target.value === 'INCOME' ? 'Reserva' : 'Limpieza' })}
                   className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                   style={{ minHeight: '44px' }}
                 >
-                  <option value="Reserva">Reserva</option>
-                  <option value="Otros">Otros</option>
+                  <option value="EXPENSE">Gasto (-)</option>
+                  <option value="INCOME">Ingreso (+)</option>
                 </select>
-              ) : (
-                <select
-                  value={financeForm.category}
-                  onChange={(e) => setFinanceForm({ ...financeForm, category: e.target.value })}
-                  className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                  style={{ minHeight: '44px' }}
-                >
-                  <option value="Limpieza">Limpieza</option>
-                  <option value="Mantenimiento">Mantenimiento</option>
-                  <option value="Servicios">Servicios</option>
-                  <option value="Otros">Otros</option>
-                </select>
-              )}
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-muted-foreground uppercase">Categoría</label>
+                {financeForm.type === 'INCOME' ? (
+                  <select
+                    value={financeForm.category}
+                    onChange={(e) => setFinanceForm({ ...financeForm, category: e.target.value })}
+                    className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                    style={{ minHeight: '44px' }}
+                  >
+                    <option value="Reserva">Reserva</option>
+                    <option value="Otros">Otros</option>
+                  </select>
+                ) : (
+                  <select
+                    value={financeForm.category}
+                    onChange={(e) => setFinanceForm({ ...financeForm, category: e.target.value })}
+                    className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                    style={{ minHeight: '44px' }}
+                  >
+                    <option value="Limpieza">Limpieza</option>
+                    <option value="Mantenimiento">Mantenimiento</option>
+                    <option value="Servicios">Servicios</option>
+                    <option value="Otros">Otros</option>
+                  </select>
+                )}
+              </div>
             </div>
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-muted-foreground uppercase">Monto ($ USD)</label>
-            <input
-              type="number"
-              step="0.01"
-              required
-              placeholder="0.00"
-              value={financeForm.amount}
-              onChange={(e) => setFinanceForm({ ...financeForm, amount: e.target.value })}
-              className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-              style={{ minHeight: '44px' }}
-            />
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-muted-foreground uppercase">Descripción / Nota</label>
-            <input
-              type="text"
-              placeholder="Ej. Pago servicio internet Izzi"
-              value={financeForm.description}
-              onChange={(e) => setFinanceForm({ ...financeForm, description: e.target.value })}
-              className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-              style={{ minHeight: '44px' }}
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full bg-primary text-primary-foreground font-semibold py-3 rounded-xl hover:bg-primary/95 transition-colors disabled:opacity-50 h-12 mt-4"
-          >
-            {isSubmitting ? 'Guardando...' : 'Registrar Transacción'}
-          </button>
-        </form>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-muted-foreground uppercase">Monto ($ USD)</label>
+              <input
+                type="number"
+                step="0.01"
+                required
+                placeholder="0.00"
+                value={financeForm.amount}
+                onChange={(e) => setFinanceForm({ ...financeForm, amount: e.target.value })}
+                className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                style={{ minHeight: '44px' }}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-muted-foreground uppercase">Descripción / Nota</label>
+              <input
+                type="text"
+                placeholder="Ej. Pago servicio internet Izzi"
+                value={financeForm.description}
+                onChange={(e) => setFinanceForm({ ...financeForm, description: e.target.value })}
+                className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                style={{ minHeight: '44px' }}
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full bg-primary text-primary-foreground font-semibold py-3 rounded-xl hover:bg-primary/95 transition-colors disabled:opacity-50 h-12 mt-4"
+            >
+              {isSubmitting ? 'Guardando...' : 'Registrar Transacción'}
+            </button>
+          </form>
+        )}
       </Drawer>
 
       {/* 3. Task Drawer */}
@@ -907,74 +1235,91 @@ export default function DashboardClient({
         onClose={() => setIsTaskOpen(false)}
         title="Crear Nueva Tarea"
       >
-        <form onSubmit={handleTaskSubmit} className="space-y-4">
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-muted-foreground uppercase">Propiedad</label>
-            <select
-              value={taskForm.propertyId}
-              onChange={(e) => setTaskForm({ ...taskForm, propertyId: e.target.value })}
-              className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-              style={{ minHeight: '44px' }}
+        {properties.length === 0 ? (
+          <div className="space-y-4 text-center py-4">
+            <div className="p-4 border border-amber-500/20 bg-amber-500/5 text-amber-700 dark:text-amber-400 text-xs rounded-xl font-medium">
+              Por favor, primero registra una propiedad en la pantalla principal antes de añadir tareas.
+            </div>
+            <button
+              onClick={() => {
+                setIsTaskOpen(false);
+                setIsPropertyOpen(true);
+              }}
+              className="w-full bg-primary text-primary-foreground font-semibold py-3 rounded-xl hover:bg-primary/95 transition-colors h-12"
             >
-              {properties.map(p => (
-                <option key={p.id} value={p.id}>{p.name}</option>
-              ))}
-            </select>
+              Registrar Propiedad
+            </button>
           </div>
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-muted-foreground uppercase">Título de la Tarea</label>
-            <input
-              type="text"
-              required
-              placeholder="Ej. Comprar papel higiénico"
-              value={taskForm.title}
-              onChange={(e) => setTaskForm({ ...taskForm, title: e.target.value })}
-              className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-              style={{ minHeight: '44px' }}
-            />
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-muted-foreground uppercase">Detalles / Instrucciones</label>
-            <textarea
-              placeholder="Instrucciones adicionales para el staff..."
-              value={taskForm.description}
-              onChange={(e) => setTaskForm({ ...taskForm, description: e.target.value })}
-              className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring h-20 resize-none"
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
+        ) : (
+          <form onSubmit={handleTaskSubmit} className="space-y-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-muted-foreground uppercase">Fecha Límite</label>
+              <label className="text-xs font-bold text-muted-foreground uppercase">Propiedad</label>
+              <select
+                value={activePropertyIdForTask}
+                onChange={(e) => setTaskForm({ ...taskForm, propertyId: e.target.value })}
+                className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                style={{ minHeight: '44px' }}
+              >
+                {properties.map(p => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-muted-foreground uppercase">Título de la Tarea</label>
               <input
-                type="date"
+                type="text"
                 required
-                value={taskForm.dueDate}
-                onChange={(e) => setTaskForm({ ...taskForm, dueDate: e.target.value })}
+                placeholder="Ej. Comprar papel higiénico"
+                value={taskForm.title}
+                onChange={(e) => setTaskForm({ ...taskForm, title: e.target.value })}
                 className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 style={{ minHeight: '44px' }}
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-muted-foreground uppercase">Categoría</label>
-              <select
-                value={taskForm.type}
-                onChange={(e) => setTaskForm({ ...taskForm, type: e.target.value })}
-                className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                style={{ minHeight: '44px' }}
-              >
-                <option value="CLEANING">Limpieza</option>
-                <option value="MAINTENANCE">Mantenimiento</option>
-              </select>
+              <label className="text-xs font-bold text-muted-foreground uppercase">Detalles / Instrucciones</label>
+              <textarea
+                placeholder="Instrucciones adicionales para el staff..."
+                value={taskForm.description}
+                onChange={(e) => setTaskForm({ ...taskForm, description: e.target.value })}
+                className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring h-20 resize-none"
+              />
             </div>
-          </div>
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full bg-primary text-primary-foreground font-semibold py-3 rounded-xl hover:bg-primary/95 transition-colors disabled:opacity-50 h-12 mt-4"
-          >
-            {isSubmitting ? 'Guardando...' : 'Crear Tarea'}
-          </button>
-        </form>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-muted-foreground uppercase">Fecha Límite</label>
+                <input
+                  type="date"
+                  required
+                  value={taskForm.dueDate}
+                  onChange={(e) => setTaskForm({ ...taskForm, dueDate: e.target.value })}
+                  className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  style={{ minHeight: '44px' }}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-muted-foreground uppercase">Categoría</label>
+                <select
+                  value={taskForm.type}
+                  onChange={(e) => setTaskForm({ ...taskForm, type: e.target.value })}
+                  className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  style={{ minHeight: '44px' }}
+                >
+                  <option value="CLEANING">Limpieza</option>
+                  <option value="MAINTENANCE">Mantenimiento</option>
+                </select>
+              </div>
+            </div>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full bg-primary text-primary-foreground font-semibold py-3 rounded-xl hover:bg-primary/95 transition-colors disabled:opacity-50 h-12 mt-4"
+            >
+              {isSubmitting ? 'Guardando...' : 'Crear Tarea'}
+            </button>
+          </form>
+        )}
       </Drawer>
 
       {/* 4. Stock Adjustment Drawer */}

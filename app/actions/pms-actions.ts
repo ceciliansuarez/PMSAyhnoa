@@ -147,3 +147,49 @@ export async function createTask(formData: {
   revalidatePath('/dashboard');
   return { success: true };
 }
+
+// PROPERTIES
+export async function createProperty(formData: {
+  name: string;
+  address: string;
+  colorCode: string;
+}) {
+  const currentProperties = await db.properties.findMany();
+  if (currentProperties.length >= 3) {
+    throw new Error('El sistema PMS está limitado a un máximo de 3 propiedades.');
+  }
+
+  await db.properties.create({
+    data: {
+      name: formData.name,
+      address: formData.address,
+      colorCode: formData.colorCode,
+    },
+  });
+
+  revalidatePath('/dashboard');
+  revalidatePath('/calendar');
+  return { success: true };
+}
+
+// INVENTORY ITEMS
+export async function createInventoryItem(formData: {
+  propertyId: string;
+  name: string;
+  currentStock: number;
+  minStock: number;
+  unit: string;
+}) {
+  await db.inventory.create({
+    data: {
+      propertyId: formData.propertyId,
+      name: formData.name,
+      currentStock: formData.currentStock,
+      minStock: formData.minStock,
+      unit: formData.unit,
+    },
+  });
+
+  revalidatePath('/dashboard');
+  return { success: true };
+}
