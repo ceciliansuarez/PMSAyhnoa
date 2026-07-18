@@ -158,12 +158,22 @@ export default function DashboardClient({
     'Otros': false,
   });
 
+  // Collapsed states for main spaces
+  const [collapsedSpaces, setCollapsedSpaces] = useState<Record<string, boolean>>({});
+
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const toggleKitchenSection = (section: string) => {
     setExpandedKitchenSections(prev => ({
       ...prev,
       [section]: !prev[section]
+    }));
+  };
+
+  const toggleSpaceCollapse = (spaceId: string) => {
+    setCollapsedSpaces(prev => ({
+      ...prev,
+      [spaceId]: !prev[spaceId]
     }));
   };
 
@@ -938,28 +948,7 @@ export default function DashboardClient({
         <div className="space-y-6">
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-bold">Inventario de Propiedades</h3>
-            {properties.length > 0 && (
-              <button
-                onClick={() => {
-                  setInventoryForm({
-                    propertyId: properties[0].id,
-                    spaceId: spaces.filter(s => s.propertyId === properties[0].id)[0]?.id || '',
-                    name: '',
-                    currentStock: '',
-                    minStock: '',
-                    unit: 'unidades',
-                    category: 'General',
-                    subCategory: '',
-                    itemType: 'OPERATIVO'
-                  });
-                  setIsNewInventoryOpen(true);
-                }}
-                className="flex items-center gap-1.5 bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-border px-3.5 py-2 rounded-xl text-xs font-semibold transition-all active:scale-95 h-10 animate-fade-in"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Nuevo Insumo</span>
-              </button>
-            )}
+            <span className="text-xs text-muted-foreground">Toca un ambiente para expandir o colapsar</span>
           </div>
 
           <div className="grid grid-cols-1 gap-6">
@@ -969,6 +958,7 @@ export default function DashboardClient({
               
               // Filter general restocking items (no spaceId)
               const reposicionItems = propInventory.filter(i => i.category === 'Reposición');
+              const isRepoCollapsed = !!collapsedSpaces[`reposicion-${prop.id}`];
 
               return (
                 <div key={prop.id} className="bg-card border border-border rounded-2xl p-5 space-y-6">
@@ -997,174 +987,208 @@ export default function DashboardClient({
                     {propSpaces.map((space) => {
                       const spaceItems = propInventory.filter(i => i.spaceId === space.id && i.category !== 'Reposición');
                       const isKitchen = space.name.toLowerCase() === 'cocina';
+                      const isCollapsed = !!collapsedSpaces[space.id];
 
                       return (
                         <div key={space.id} className="border border-border/80 rounded-xl p-4 bg-muted/10 space-y-4">
-                          {/* Space Header with options to Edit Name/Delete Space */}
-                          <div className="flex items-center justify-between pb-2 border-b border-border/40">
-                            <span className="font-bold text-sm text-foreground flex items-center gap-2">
-                              {space.name}
-                              <span className="text-[10px] bg-muted px-2 py-0.5 rounded-full text-muted-foreground font-semibold">
+                          {/* Clickable Space Header */}
+                          <div 
+                            onClick={() => toggleSpaceCollapse(space.id)}
+                            className="flex items-center justify-between pb-2 border-b border-border/40 cursor-pointer select-none"
+                          >
+                            <span className="font-bold text-sm text-foreground flex items-center gap-2 pr-4 flex-1">
+                              {isCollapsed ? <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" /> : <ChevronUp className="w-4 h-4 text-muted-foreground shrink-0" />}
+                              <span className="truncate">{space.name}</span>
+                              <span className="text-[10px] bg-muted px-2 py-0.5 rounded-full text-muted-foreground font-semibold shrink-0">
                                 {spaceItems.length}
                               </span>
                             </span>
                             
-                            <div className="flex items-center gap-1.5">
+                            {/* Actions area - stopped propagation to prevent collapse */}
+                            <div className="flex items-center gap-1.5 shrink-0" onClick={e => e.stopPropagation()}>
+                              {/* New item button LOCAL to this space */}
+                              <button
+                                onClick={() => {
+                                  setInventoryForm({
+                                    propertyId: prop.id,
+                                    spaceId: space.id,
+                                    name: '',
+                                    currentStock: '',
+                                    minStock: '',
+                                    unit: 'unidades',
+                                    category: 'General',
+                                    subCategory: '',
+                                    itemType: 'OPERATIVO'
+                                  });
+                                  setIsNewInventoryOpen(true);
+                                }}
+                                className="inline-flex items-center gap-1 text-[10px] font-extrabold text-primary bg-primary/10 hover:bg-primary/20 border border-primary/20 px-2.5 py-1.5 rounded-lg transition-all active:scale-95"
+                                style={{ minHeight: '32px' }}
+                              >
+                                <Plus className="w-3 h-3" />
+                                <span>+ Insumo</span>
+                              </button>
+
                               <button
                                 onClick={() => {
                                   setSelectedSpaceForEdit(space);
                                   setEditSpaceForm({ id: space.id, name: space.name });
                                   setIsEditSpaceOpen(true);
                                 }}
-                                className="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors"
+                                className="p-1.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors"
                                 title="Editar nombre del ambiente"
-                                style={{ minWidth: '28px', minHeight: '28px' }}
+                                style={{ minWidth: '32px', minHeight: '32px' }}
                               >
                                 <Pencil className="w-3.5 h-3.5" />
                               </button>
+                              
                               <button
                                 onClick={() => handleDeleteSpaceClick(space.id, space.name)}
-                                className="p-1 hover:bg-rose-50 rounded text-muted-foreground hover:text-rose-600 transition-colors"
+                                className="p-1.5 hover:bg-rose-50 rounded text-muted-foreground hover:text-rose-600 transition-colors"
                                 title="Eliminar ambiente"
-                                style={{ minWidth: '28px', minHeight: '28px' }}
+                                style={{ minWidth: '32px', minHeight: '32px' }}
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
                               </button>
                             </div>
                           </div>
 
-                          {/* Space items list */}
-                          {isKitchen && spaceItems.length === 0 ? (
-                            /* Premium Hospitality Seeding Banner for Empty Kitchens */
-                            <div className="p-5 border border-dashed border-primary/30 rounded-xl bg-primary/5 text-center space-y-4 py-6 animate-fade-in">
-                              <Sparkles className="w-8 h-8 text-primary mx-auto" />
-                              <div className="space-y-1">
-                                <h5 className="text-xs font-extrabold text-foreground">Ambiente Cocina sin Equipamiento</h5>
-                                <p className="text-[10px] text-muted-foreground max-w-xs mx-auto leading-relaxed">
-                                  ¿Deseas auto-cargar la vajilla, cubertería, electrodomésticos y consumibles recomendados para un estándar de 5 estrellas en Airbnb?
-                                </p>
-                              </div>
-                              <button
-                                type="button"
-                                disabled={isSubmitting}
-                                onClick={() => handleSeedKitchen(prop.id, space.id)}
-                                className="inline-flex items-center gap-1.5 bg-primary text-primary-foreground text-xs font-bold px-4 py-2.5 rounded-xl hover:bg-primary/95 transition-all disabled:opacity-50"
-                              >
-                                Cargar Equipamiento Estándar
-                              </button>
-                            </div>
-                          ) : isKitchen ? (
-                            /* Advanced accordion group layout for Kitchen items */
-                            <div className="space-y-2">
-                              {[
-                                { id: 'Vajilla y Cubertería', emoji: '🍽️', label: 'Vajilla y Cubertería' },
-                                { id: 'Utensilios y Menaje', emoji: '🍳', label: 'Utensilios y Menaje' },
-                                { id: 'Electrodomésticos', emoji: '🔌', label: 'Electrodomésticos' },
-                                { id: 'Consumibles', emoji: '🧼', label: 'Consumibles e Insumos' },
-                                { id: 'Otros', emoji: '📦', label: 'Otros Insumos de Cocina' },
-                              ].map((subGroup) => {
-                                const subGroupItems = spaceItems.filter(i => {
-                                  if (subGroup.id === 'Otros') {
-                                    return !i.subCategory || !['Vajilla y Cubertería', 'Utensilios y Menaje', 'Electrodomésticos', 'Consumibles'].includes(i.subCategory);
-                                  }
-                                  return i.subCategory === subGroup.id;
-                                });
+                          {/* Space items list (only rendered if NOT collapsed) */}
+                          {!isCollapsed && (
+                            <div className="space-y-4 pt-1 animate-fade-in">
+                              {isKitchen && spaceItems.length === 0 ? (
+                                /* Premium Hospitality Seeding Banner for Empty Kitchens */
+                                <div className="p-5 border border-dashed border-primary/30 rounded-xl bg-primary/5 text-center space-y-4 py-6">
+                                  <Sparkles className="w-8 h-8 text-primary mx-auto" />
+                                  <div className="space-y-1">
+                                    <h5 className="text-xs font-extrabold text-foreground">Ambiente Cocina sin Equipamiento</h5>
+                                    <p className="text-[10px] text-muted-foreground max-w-xs mx-auto leading-relaxed">
+                                      ¿Deseas auto-cargar la vajilla, cubertería, electrodomésticos y consumibles recomendados para un estándar de 5 estrellas en Airbnb?
+                                    </p>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    disabled={isSubmitting}
+                                    onClick={() => handleSeedKitchen(prop.id, space.id)}
+                                    className="inline-flex items-center gap-1.5 bg-primary text-primary-foreground text-xs font-bold px-4 py-2.5 rounded-xl hover:bg-primary/95 transition-all disabled:opacity-50"
+                                  >
+                                    Cargar Equipamiento Estándar
+                                  </button>
+                                </div>
+                              ) : isKitchen ? (
+                                /* Advanced accordion group layout for Kitchen items */
+                                <div className="space-y-2">
+                                  {[
+                                    { id: 'Vajilla y Cubertería', emoji: '🍽️', label: 'Vajilla y Cubertería' },
+                                    { id: 'Utensilios y Menaje', emoji: '🍳', label: 'Utensilios y Menaje' },
+                                    { id: 'Electrodomésticos', emoji: '🔌', label: 'Electrodomésticos' },
+                                    { id: 'Consumibles', emoji: '🧼', label: 'Consumibles e Insumos' },
+                                    { id: 'Otros', emoji: '📦', label: 'Otros Insumos de Cocina' },
+                                  ].map((subGroup) => {
+                                    const subGroupItems = spaceItems.filter(i => {
+                                      if (subGroup.id === 'Otros') {
+                                        return !i.subCategory || !['Vajilla y Cubertería', 'Utensilios y Menaje', 'Electrodomésticos', 'Consumibles'].includes(i.subCategory);
+                                      }
+                                      return i.subCategory === subGroup.id;
+                                    });
 
-                                const isOpen = expandedKitchenSections[subGroup.id];
+                                    const isOpen = expandedKitchenSections[subGroup.id];
 
-                                return (
-                                  <div key={subGroup.id} className="border border-border/50 rounded-xl overflow-hidden bg-background">
-                                    {/* Sub-Category Accordion Trigger */}
-                                    <button
-                                      type="button"
-                                      onClick={() => toggleKitchenSection(subGroup.id)}
-                                      className="w-full flex items-center justify-between p-3 text-xs font-bold hover:bg-muted/30 transition-colors h-11 text-left"
-                                    >
-                                      <span className="flex items-center gap-2">
-                                        <span>{subGroup.emoji}</span>
-                                        <span>{subGroup.label}</span>
-                                        <span className="text-[10px] text-muted-foreground font-semibold">
-                                          ({subGroupItems.length})
-                                        </span>
-                                      </span>
-                                      {isOpen ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
-                                    </button>
+                                    return (
+                                      <div key={subGroup.id} className="border border-border/50 rounded-xl overflow-hidden bg-background">
+                                        {/* Sub-Category Accordion Trigger */}
+                                        <button
+                                          type="button"
+                                          onClick={() => toggleKitchenSection(subGroup.id)}
+                                          className="w-full flex items-center justify-between p-3 text-xs font-bold hover:bg-muted/30 transition-colors h-11 text-left"
+                                        >
+                                          <span className="flex items-center gap-2">
+                                            <span>{subGroup.emoji}</span>
+                                            <span>{subGroup.label}</span>
+                                            <span className="text-[10px] text-muted-foreground font-semibold">
+                                              ({subGroupItems.length})
+                                            </span>
+                                          </span>
+                                          {isOpen ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+                                        </button>
 
-                                    {/* Sub-Category items */}
-                                    {isOpen && (
-                                      <div className="p-3 border-t border-border/40 divide-y divide-border/40 bg-muted/5">
-                                        {subGroupItems.length === 0 ? (
-                                          <p className="text-[11px] text-muted-foreground text-center py-3">No hay elementos en esta categoría.</p>
-                                        ) : (
-                                          subGroupItems.map(item => (
-                                            <InventoryItemRow 
-                                              key={item.id} 
-                                              item={item} 
-                                              onAdjust={handleStockAdjust} 
-                                              onEdit={(it) => {
-                                                setSelectedInventoryItemForEdit(it);
-                                                setEditInventoryForm({
-                                                  id: it.id,
-                                                  propertyId: it.propertyId,
-                                                  spaceId: it.spaceId || '',
-                                                  name: it.name,
-                                                  currentStock: it.currentStock.toString(),
-                                                  minStock: it.minStock.toString(),
-                                                  unit: it.unit,
-                                                  category: it.category,
-                                                  subCategory: it.subCategory || '',
-                                                  itemType: it.itemType || 'OPERATIVO'
-                                                });
-                                                setIsEditInventoryOpen(true);
-                                              }}
-                                              onDelete={handleDeleteInventoryClick}
-                                              onOpenAdjust={(it) => {
-                                                setSelectedInventoryItem(it);
-                                                setIsInventoryOpen(true);
-                                              }}
-                                            />
-                                          ))
+                                        {/* Sub-Category items */}
+                                        {isOpen && (
+                                          <div className="p-3 border-t border-border/40 divide-y divide-border/40 bg-muted/5">
+                                            {subGroupItems.length === 0 ? (
+                                              <p className="text-[11px] text-muted-foreground text-center py-3">No hay elementos en esta categoría.</p>
+                                            ) : (
+                                              subGroupItems.map(item => (
+                                                <InventoryItemRow 
+                                                  key={item.id} 
+                                                  item={item} 
+                                                  onAdjust={handleStockAdjust} 
+                                                  onEdit={(it) => {
+                                                    setSelectedInventoryItemForEdit(it);
+                                                    setEditInventoryForm({
+                                                      id: it.id,
+                                                      propertyId: it.propertyId,
+                                                      spaceId: it.spaceId || '',
+                                                      name: it.name,
+                                                      currentStock: it.currentStock.toString(),
+                                                      minStock: it.minStock.toString(),
+                                                      unit: it.unit,
+                                                      category: it.category,
+                                                      subCategory: it.subCategory || '',
+                                                      itemType: it.itemType || 'OPERATIVO'
+                                                    });
+                                                    setIsEditInventoryOpen(true);
+                                                  }}
+                                                  onDelete={handleDeleteInventoryClick}
+                                                  onOpenAdjust={(it) => {
+                                                    setSelectedInventoryItem(it);
+                                                    setIsInventoryOpen(true);
+                                                  }}
+                                                />
+                                              ))
+                                            )}
+                                          </div>
                                         )}
                                       </div>
-                                    )}
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          ) : (
-                            /* Flat list for normal spaces */
-                            <div className="divide-y divide-border/40 bg-background rounded-xl border border-border/50 p-2">
-                              {spaceItems.length === 0 ? (
-                                <p className="text-xs text-muted-foreground text-center py-4">Sin insumos registrados.</p>
+                                    );
+                                  })}
+                                </div>
                               ) : (
-                                spaceItems.map(item => (
-                                  <InventoryItemRow 
-                                    key={item.id} 
-                                    item={item} 
-                                    onAdjust={handleStockAdjust} 
-                                    onEdit={(it) => {
-                                      setSelectedInventoryItemForEdit(it);
-                                      setEditInventoryForm({
-                                        id: it.id,
-                                        propertyId: it.propertyId,
-                                        spaceId: it.spaceId || '',
-                                        name: it.name,
-                                        currentStock: it.currentStock.toString(),
-                                        minStock: it.minStock.toString(),
-                                        unit: it.unit,
-                                        category: it.category,
-                                        subCategory: it.subCategory || '',
-                                        itemType: it.itemType || 'OPERATIVO'
-                                      });
-                                      setIsEditInventoryOpen(true);
-                                    }}
-                                    onDelete={handleDeleteInventoryClick}
-                                    onOpenAdjust={(it) => {
-                                      setSelectedInventoryItem(it);
-                                      setIsInventoryOpen(true);
-                                    }}
-                                  />
-                                ))
+                                /* Flat list for normal spaces */
+                                <div className="divide-y divide-border/40 bg-background rounded-xl border border-border/50 p-2">
+                                  {spaceItems.length === 0 ? (
+                                    <p className="text-xs text-muted-foreground text-center py-4">Sin insumos registrados.</p>
+                                  ) : (
+                                    spaceItems.map(item => (
+                                      <InventoryItemRow 
+                                        key={item.id} 
+                                        item={item} 
+                                        onAdjust={handleStockAdjust} 
+                                        onEdit={(it) => {
+                                          setSelectedInventoryItemForEdit(it);
+                                          setEditInventoryForm({
+                                            id: it.id,
+                                            propertyId: it.propertyId,
+                                            spaceId: it.spaceId || '',
+                                            name: it.name,
+                                            currentStock: it.currentStock.toString(),
+                                            minStock: it.minStock.toString(),
+                                            unit: it.unit,
+                                            category: it.category,
+                                            subCategory: it.subCategory || '',
+                                            itemType: it.itemType || 'OPERATIVO'
+                                          });
+                                          setIsEditInventoryOpen(true);
+                                        }}
+                                        onDelete={handleDeleteInventoryClick}
+                                        onOpenAdjust={(it) => {
+                                          setSelectedInventoryItem(it);
+                                          setIsInventoryOpen(true);
+                                        }}
+                                      />
+                                    ))
+                                  )}
+                                </div>
                               )}
                             </div>
                           )}
@@ -1174,49 +1198,81 @@ export default function DashboardClient({
 
                     {/* 2. Reposición Category (Static block) */}
                     <div className="border border-dashed border-border rounded-xl p-4 bg-muted/5 space-y-4">
-                      <div className="pb-2 border-b border-border/40">
-                        <span className="font-extrabold text-sm text-muted-foreground flex items-center gap-2">
-                          📦 Reposición y Carga General
-                          <span className="text-[10px] bg-muted px-2 py-0.5 rounded-full text-muted-foreground font-semibold">
+                      {/* Clickable Header for Reposición */}
+                      <div 
+                        onClick={() => toggleSpaceCollapse(`reposicion-${prop.id}`)}
+                        className="flex items-center justify-between pb-2 border-b border-border/40 cursor-pointer select-none"
+                      >
+                        <span className="font-extrabold text-sm text-muted-foreground flex items-center gap-2 pr-4 flex-1">
+                          {isRepoCollapsed ? <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" /> : <ChevronUp className="w-4 h-4 text-muted-foreground shrink-0" />}
+                          <span>📦 Reposición y Carga General</span>
+                          <span className="text-[10px] bg-muted px-2 py-0.5 rounded-full text-muted-foreground font-semibold shrink-0">
                             {reposicionItems.length}
                           </span>
                         </span>
+
+                        <div className="flex items-center gap-1.5 shrink-0" onClick={e => e.stopPropagation()}>
+                          <button
+                            onClick={() => {
+                              setInventoryForm({
+                                propertyId: prop.id,
+                                spaceId: '',
+                                name: '',
+                                currentStock: '',
+                                minStock: '',
+                                unit: 'unidades',
+                                category: 'Reposición',
+                                subCategory: '',
+                                itemType: 'OPERATIVO'
+                              });
+                              setIsNewInventoryOpen(true);
+                            }}
+                            className="inline-flex items-center gap-1 text-[10px] font-extrabold text-muted-foreground bg-muted hover:bg-muted-foreground/10 border border-border px-2.5 py-1.5 rounded-lg transition-all active:scale-95"
+                            style={{ minHeight: '32px' }}
+                          >
+                            <Plus className="w-3 h-3" />
+                            <span>+ Insumo</span>
+                          </button>
+                        </div>
                       </div>
 
-                      <div className="divide-y divide-border/40 bg-background rounded-xl border border-border/50 p-2">
-                        {reposicionItems.length === 0 ? (
-                          <p className="text-xs text-muted-foreground text-center py-4">No hay insumos generales de reposición.</p>
-                        ) : (
-                          reposicionItems.map(item => (
-                            <InventoryItemRow 
-                              key={item.id} 
-                              item={item} 
-                              onAdjust={handleStockAdjust} 
-                              onEdit={(it) => {
-                                setSelectedInventoryItemForEdit(it);
-                                setEditInventoryForm({
-                                  id: it.id,
-                                  propertyId: it.propertyId,
-                                  spaceId: it.spaceId || '',
-                                  name: it.name,
-                                  currentStock: it.currentStock.toString(),
-                                  minStock: it.minStock.toString(),
-                                  unit: it.unit,
-                                  category: it.category,
-                                  subCategory: it.subCategory || '',
-                                  itemType: it.itemType || 'OPERATIVO'
-                                });
-                                setIsEditInventoryOpen(true);
-                              }}
-                              onDelete={handleDeleteInventoryClick}
-                              onOpenAdjust={(it) => {
-                                setSelectedInventoryItem(it);
-                                setIsInventoryOpen(true);
-                              }}
-                            />
-                          ))
-                        )}
-                      </div>
+                      {/* Reposicion List (only rendered if NOT collapsed) */}
+                      {!isRepoCollapsed && (
+                        <div className="divide-y divide-border/40 bg-background rounded-xl border border-border/50 p-2 animate-fade-in">
+                          {reposicionItems.length === 0 ? (
+                            <p className="text-xs text-muted-foreground text-center py-4">No hay insumos generales de reposición.</p>
+                          ) : (
+                            reposicionItems.map(item => (
+                              <InventoryItemRow 
+                                key={item.id} 
+                                item={item} 
+                                onAdjust={handleStockAdjust} 
+                                onEdit={(it) => {
+                                  setSelectedInventoryItemForEdit(it);
+                                  setEditInventoryForm({
+                                    id: it.id,
+                                    propertyId: it.propertyId,
+                                    spaceId: it.spaceId || '',
+                                    name: it.name,
+                                    currentStock: it.currentStock.toString(),
+                                    minStock: it.minStock.toString(),
+                                    unit: it.unit,
+                                    category: it.category,
+                                    subCategory: it.subCategory || '',
+                                    itemType: it.itemType || 'OPERATIVO'
+                                  });
+                                  setIsEditInventoryOpen(true);
+                                }}
+                                onDelete={handleDeleteInventoryClick}
+                                onOpenAdjust={(it) => {
+                                  setSelectedInventoryItem(it);
+                                  setIsInventoryOpen(true);
+                                }}
+                              />
+                            ))
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
