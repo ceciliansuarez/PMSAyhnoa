@@ -160,7 +160,7 @@ export default function DashboardClient({
     'Otros': false,
   });
 
-  // Collapsed states for main spaces
+  // Collapsed states for main spaces (empty by default means they will collapse on first render)
   const [collapsedSpaces, setCollapsedSpaces] = useState<Record<string, boolean>>({});
 
   // Checklist states for the shopping list
@@ -181,10 +181,13 @@ export default function DashboardClient({
   };
 
   const toggleSpaceCollapse = (spaceId: string) => {
-    setCollapsedSpaces(prev => ({
-      ...prev,
-      [spaceId]: !prev[spaceId]
-    }));
+    setCollapsedSpaces(prev => {
+      const current = prev[spaceId] === undefined ? true : prev[spaceId];
+      return {
+        ...prev,
+        [spaceId]: !current
+      };
+    });
   };
 
   // Calculations for current occupancy statuses
@@ -1094,7 +1097,8 @@ export default function DashboardClient({
               
               // Filter general restocking items (no spaceId)
               const reposicionItems = propInventory.filter(i => i.category === 'Reposición');
-              const isRepoCollapsed = !!collapsedSpaces[`reposicion-${prop.id}`];
+              // Collapsed by default means undefined evaluates to true (collapsed)
+              const isRepoCollapsed = collapsedSpaces[`reposicion-${prop.id}`] === undefined ? true : collapsedSpaces[`reposicion-${prop.id}`];
 
               return (
                 <div key={prop.id} className="bg-card border border-border rounded-2xl p-5 space-y-6">
@@ -1123,7 +1127,8 @@ export default function DashboardClient({
                     {propSpaces.map((space) => {
                       const spaceItems = propInventory.filter(i => i.spaceId === space.id && i.category !== 'Reposición');
                       const isKitchen = space.name.toLowerCase() === 'cocina';
-                      const isCollapsed = !!collapsedSpaces[space.id];
+                      // Collapsed by default means undefined evaluates to true (collapsed)
+                      const isCollapsed = collapsedSpaces[space.id] === undefined ? true : collapsedSpaces[space.id];
 
                       return (
                         <div key={space.id} className="border border-border/80 rounded-xl p-4 bg-muted/10 space-y-4">
